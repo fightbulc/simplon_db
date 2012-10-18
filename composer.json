@@ -16,16 +16,9 @@
 
     "minimum-stability": "dev",
 
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/fightbulc/easy_pdo"
-        }
-    ],
-
     "require": {
         "php": ">=5.3.3",
-        "fightbulc/easy_pdo": "dev-master"
+        "fightbulc/easy_pdo": "*"
     },
 
     "autoload": {
