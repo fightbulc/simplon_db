@@ -19,13 +19,13 @@
     "repositories": [
         {
             "type": "vcs",
-            "url": "https://github.com/fightbulc/EasyPDO"
+            "url": "https://github.com/fightbulc/easy_pdo"
         }
     ],
 
     "require": {
         "php": ">=5.3.3",
-        "efides/easypdo": "dev-master"
+        "efides/easy_pdo": "dev-master"
     },
 
     "autoload": {
