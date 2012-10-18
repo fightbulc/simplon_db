@@ -33,6 +33,4 @@
             "Simplon\\Db\\": "src/"
         }
     },
-
-    "target-dir": "Simplon/Db"
 }
