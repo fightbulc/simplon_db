@@ -59,6 +59,16 @@
     // ##########################################
 
     /**
+     * @return AbstractDbCacheQuery
+     */
+    public static function init()
+    {
+        return new AbstractDbCacheQuery();
+    }
+
+    // ##########################################
+
+    /**
      * @param bool $useCache
      * @return AbstractDbCacheQuery
      */
