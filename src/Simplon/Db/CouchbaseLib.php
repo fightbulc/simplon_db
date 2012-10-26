@@ -36,6 +36,28 @@
     // ########################################
 
     /**
+     * @param $data
+     * @return string
+     */
+    protected function _jsonEncode($data)
+    {
+      return json_encode($data);
+    }
+
+    // ########################################
+
+    /**
+     * @param $json
+     * @return mixed
+     */
+    protected function _jsonDecodeAsArray($json)
+    {
+      return json_decode($json, TRUE);
+    }
+
+    // ########################################
+
+    /**
      * @param string $cacheId
      * @return array
      */
@@ -47,9 +69,9 @@
         ->getInstance()
         ->get($cacheId);
 
-      if (!empty($jsonData))
+      if(! empty($jsonData))
       {
-        $result = \Simplon\Lib\Helper\FormatHelper::jsonDecode($jsonData);
+        $result = $this->_jsonDecodeAsArray($jsonData);
       }
 
       return $result;
@@ -67,7 +89,7 @@
         ->getInstance()
         ->getMulti($cacheIds);
 
-      return \Simplon\Lib\Helper\FormatHelper::jsonDecode($jsonData);
+      return $this->_jsonDecodeAsArray($jsonData);
     }
 
     // ########################################
@@ -80,11 +102,11 @@
      */
     public function set($cacheId, $data, $expireSeconds = 0)
     {
-      $dataToJson = \Simplon\Lib\Helper\FormatHelper::jsonEncode($data);
+      $jsonData = $this->_jsonEncode($data);
 
       return $this
         ->getInstance()
-        ->set($cacheId, $dataToJson, $expireSeconds);
+        ->set($cacheId, $jsonData, $expireSeconds);
     }
 
     // ########################################
@@ -96,7 +118,7 @@
      */
     public function setUnique($cacheId, $data, $expireSeconds = 1)
     {
-      $jsonData = \Simplon\Lib\Helper\FormatHelper::jsonEncode($data);
+      $jsonData = $this->_jsonEncode($data);
 
       $this
         ->getInstance()
@@ -111,7 +133,7 @@
      */
     public function setMulti($data, $expireSeconds = 1)
     {
-      $jsonData = \Simplon\Lib\Helper\FormatHelper::jsonEncode($data);
+      $jsonData = $this->_jsonEncode($data);
 
       $this
         ->getInstance()
@@ -138,7 +160,7 @@
      * @param $cacheId
      * @return mixed
      */
-    public function destroy($cacheId)
+    public function delete($cacheId)
     {
       return $this
         ->getInstance()

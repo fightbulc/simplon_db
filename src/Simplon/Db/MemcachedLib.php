@@ -32,10 +32,6 @@
     {
       $this->_instance = new \Memcached();
 
-      $appName = \App\AppContext::getInstance()
-        ->getConfigByKeys(array('appName'));
-
-      $this->_instance->setOption(\Memcached::OPT_PREFIX_KEY, $appName . '_');
       $this->_instance->setOption(\Memcached::SERIALIZER_JSON, TRUE);
       $this->_instance->setOption(\Memcached::OPT_COMPRESSION, FALSE);
       $this->_instance->setOption(\Memcached::OPT_CONNECT_TIMEOUT, 500);
@@ -43,10 +39,32 @@
       $this->_instance->setOption(\Memcached::OPT_TCP_NODELAY, TRUE);
       $this->_instance->setOption(\Memcached::OPT_NO_BLOCK, TRUE);
 
-      if (!count($this->_instance->getServerList()))
+      if(! count($this->_instance->getServerList()))
       {
         $this->_instance->addServer($server, $port);
       }
+    }
+
+    // ########################################
+
+    /**
+     * @param $data
+     * @return string
+     */
+    protected function _jsonEncode($data)
+    {
+      return json_encode($data);
+    }
+
+    // ########################################
+
+    /**
+     * @param $json
+     * @return mixed
+     */
+    protected function _jsonDecodeAsArray($json)
+    {
+      return json_decode($json, TRUE);
     }
 
     // ########################################
@@ -57,9 +75,16 @@
      */
     public function get($cacheId)
     {
-      return $this
+      $jsonData = $this
         ->getInstance()
         ->get($cacheId);
+
+      if(empty($jsonData))
+      {
+        return FALSE;
+      }
+
+      return $this->_jsonDecodeAsArray($jsonData);
     }
 
     // ########################################
@@ -70,9 +95,11 @@
      */
     public function getMulti(array $cacheIds)
     {
-      return $this
+      $jsonData = $this
         ->getInstance()
         ->getMulti($cacheIds);
+
+      return $this->_jsonDecodeAsArray($jsonData);
     }
 
     // ########################################
@@ -85,9 +112,11 @@
      */
     public function set($cacheId, $data, $expireSeconds = 0)
     {
+      $jsonData = $this->_jsonEncode($data);
+
       $this
         ->getInstance()
-        ->set($cacheId, $data, $expireSeconds);
+        ->set($cacheId, $jsonData, $expireSeconds);
     }
 
     // ########################################
@@ -98,9 +127,11 @@
      */
     public function setMulti(array $data, $expireSeconds = 1)
     {
+      $jsonData = $this->_jsonEncode($data);
+
       $this
         ->getInstance()
-        ->setMulti($data, 0, $expireSeconds);
+        ->setMulti($jsonData, 0, $expireSeconds);
     }
 
     // ########################################
