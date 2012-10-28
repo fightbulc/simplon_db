@@ -4,33 +4,31 @@
 
   class CouchbaseLib
   {
-    /**
-     * @var \Couchbase
-     */
-    private $_instance;
-
-    // ########################################
-
-    /**
-     * @return \Couchbase
-     */
-    public function getInstance()
-    {
-      return $this->_instance;
-    }
+    /** @var \Couchbase */
+    protected $_instance;
 
     // ########################################
 
     /**
      * @param $server
      * @param $port
-     * @param $userName
+     * @param $username
      * @param $password
      * @param $bucket
      */
-    public function __construct($server, $port, $userName, $password, $bucket)
+    public function __construct($server, $port, $username, $password, $bucket)
     {
-      $this->_instance = new \Couchbase($server . ':' . $port, $userName, $password, $bucket);
+      $this->_instance = new \Couchbase($server . ':' . $port, $username, $password, $bucket);
+    }
+
+    // ########################################
+
+    /**
+     * @return \Couchbase
+     */
+    protected function _getCouchbaseInstance()
+    {
+      return $this->_instance;
     }
 
     // ########################################
@@ -66,7 +64,7 @@
       $result = array();
 
       $jsonData = $this
-        ->getInstance()
+        ->_getCouchbaseInstance()
         ->get($cacheId);
 
       if(! empty($jsonData))
@@ -86,7 +84,7 @@
     public function getMulti($cacheIds)
     {
       $jsonData = $this
-        ->getInstance()
+        ->_getCouchbaseInstance()
         ->getMulti($cacheIds);
 
       return $this->_jsonDecodeAsArray($jsonData);
@@ -105,7 +103,7 @@
       $jsonData = $this->_jsonEncode($data);
 
       return $this
-        ->getInstance()
+        ->_getCouchbaseInstance()
         ->set($cacheId, $jsonData, $expireSeconds);
     }
 
@@ -121,7 +119,7 @@
       $jsonData = $this->_jsonEncode($data);
 
       $this
-        ->getInstance()
+        ->_getCouchbaseInstance()
         ->add($cacheId, $jsonData, $expireSeconds);
     }
 
@@ -136,7 +134,7 @@
       $jsonData = $this->_jsonEncode($data);
 
       $this
-        ->getInstance()
+        ->_getCouchbaseInstance()
         ->setMulti($jsonData, $expireSeconds);
     }
 
@@ -150,7 +148,7 @@
     public function keepKeyAlive($cacheId, $expireSeconds = 1)
     {
       return $this
-        ->getInstance()
+        ->_getCouchbaseInstance()
         ->touch($cacheId, $expireSeconds);
     }
 
@@ -163,7 +161,7 @@
     public function delete($cacheId)
     {
       return $this
-        ->getInstance()
+        ->_getCouchbaseInstance()
         ->delete($cacheId);
     }
 
@@ -175,7 +173,7 @@
     public function flush()
     {
       return $this
-        ->getInstance()
+        ->_getCouchbaseInstance()
         ->flush();
     }
   }
