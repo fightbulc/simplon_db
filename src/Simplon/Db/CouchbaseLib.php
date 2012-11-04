@@ -131,7 +131,12 @@
      */
     public function setMulti($data, $expireSeconds = 1)
     {
-      $jsonData = $this->_jsonEncode($data);
+      $jsonData = array();
+
+      foreach($data as $key => $val)
+      {
+        $jsonData[$key] = $this->_jsonEncode($val);
+      }
 
       $this
         ->_getCouchbaseInstance()
@@ -175,5 +180,20 @@
       return $this
         ->_getCouchbaseInstance()
         ->flush();
+    }
+
+    // ########################################
+
+    /**
+     * @param $designDocName
+     * @param $viewName
+     * @param array $filterOptions
+     * @return mixed
+     */
+    public function getView($designDocName, $viewName, $filterOptions = array())
+    {
+      return $this
+        ->_getCouchbaseInstance()
+        ->view($designDocName, $viewName, $filterOptions);
     }
   }
