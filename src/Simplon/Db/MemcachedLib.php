@@ -127,7 +127,12 @@
      */
     public function setMulti(array $data, $expireSeconds = 1)
     {
-      $jsonData = $this->_jsonEncode($data);
+      $jsonData = array();
+
+      foreach($data as $key => $val)
+      {
+        $jsonData[$key] = $this->_jsonEncode($val);
+      }
 
       $this
         ->getInstance()
