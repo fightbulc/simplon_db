@@ -1,6 +1,6 @@
 <?php
 
-  namespace Simplon\Db\Abstracts;
+  namespace Simplon\Db;
 
   class SqlQueryBuilder
   {

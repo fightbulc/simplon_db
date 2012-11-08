@@ -32,27 +32,27 @@
     // ########################################
 
     /**
-     * @param SqlQueryBuilder $dbCacheQuery
+     * @param \Simplon\Db\SqlQueryBuilder $sqlQuery
      * @return null
      */
-    protected function fetchColumn(SqlQueryBuilder $dbCacheQuery)
+    protected function fetchColumn(\Simplon\Db\SqlQueryBuilder $sqlQuery)
     {
       return $this
         ->getSqlInstance()
-        ->FetchValue($dbCacheQuery->getQuery(), $dbCacheQuery->getConditions());
+        ->FetchValue($sqlQuery->getQuery(), $sqlQuery->getConditions());
     }
 
     // ########################################
 
     /**
-     * @param SqlQueryBuilder $dbCacheQuery
+     * @param \Simplon\Db\SqlQueryBuilder $sqlQuery
      * @return mixed
      */
-    protected function fetchRow(SqlQueryBuilder $dbCacheQuery)
+    protected function fetchRow(\Simplon\Db\SqlQueryBuilder $sqlQuery)
     {
       $result = $this
         ->getSqlInstance()
-        ->FetchArray($dbCacheQuery->getQuery(), $dbCacheQuery->getConditions());
+        ->FetchArray($sqlQuery->getQuery(), $sqlQuery->getConditions());
 
       return $result;
     }
@@ -60,14 +60,14 @@
     // ########################################
 
     /**
-     * @param SqlQueryBuilder $dbCacheQuery
+     * @param \Simplon\Db\SqlQueryBuilder $sqlQuery
      * @return mixed
      */
-    protected function fetchAll(SqlQueryBuilder $dbCacheQuery)
+    protected function fetchAll(\Simplon\Db\SqlQueryBuilder $sqlQuery)
     {
       $result = $this
         ->getSqlInstance()
-        ->FetchAll($dbCacheQuery->getQuery(), $dbCacheQuery->getConditions());
+        ->FetchAll($sqlQuery->getQuery(), $sqlQuery->getConditions());
 
       return $result;
     }
@@ -75,13 +75,13 @@
     // ########################################
 
     /**
-     * @param SqlQueryBuilder $dbCacheQuery
+     * @param \Simplon\Db\SqlQueryBuilder $sqlQuery
      * @return bool|null|string
      */
-    protected function insert(SqlQueryBuilder $dbCacheQuery)
+    protected function insert(\Simplon\Db\SqlQueryBuilder $sqlQuery)
     {
-      $tableName = $dbCacheQuery->getTableName();
-      $data = $dbCacheQuery->getData();
+      $tableName = $sqlQuery->getTableName();
+      $data = $sqlQuery->getData();
 
       if($tableName && ! empty($data))
       {
@@ -111,7 +111,7 @@
         $insertString = 'INSERT';
 
         // insert ignore awareness for tables with unique entries
-        if($dbCacheQuery->getInsertIgnore() === TRUE)
+        if($sqlQuery->getInsertIgnore() === TRUE)
         {
           $insertString = 'INSERT IGNORE';
         }
@@ -133,14 +133,14 @@
     // ########################################
 
     /**
-     * @param SqlQueryBuilder $dbCacheQuery
+     * @param \Simplon\Db\SqlQueryBuilder $sqlQuery
      * @return bool|null|string
      */
-    protected function update(SqlQueryBuilder $dbCacheQuery)
+    protected function update(\Simplon\Db\SqlQueryBuilder $sqlQuery)
     {
-      $tableName = $dbCacheQuery->getTableName();
-      $newData = $dbCacheQuery->getData();
-      $updateConditions = $dbCacheQuery->getConditions();
+      $tableName = $sqlQuery->getTableName();
+      $newData = $sqlQuery->getData();
+      $updateConditions = $sqlQuery->getConditions();
 
       if($tableName && ! empty($newData) && ! empty($updateConditions))
       {
@@ -194,13 +194,13 @@
     // ########################################
 
     /**
-     * @param SqlQueryBuilder $dbCacheQuery
+     * @param \Simplon\Db\SqlQueryBuilder $sqlQuery
      * @return bool|null|string
      */
-    protected function remove(SqlQueryBuilder $dbCacheQuery)
+    protected function remove(\Simplon\Db\SqlQueryBuilder $sqlQuery)
     {
-      $tableName = $dbCacheQuery->getTableName();
-      $deleteConditions = $dbCacheQuery->getConditions();
+      $tableName = $sqlQuery->getTableName();
+      $deleteConditions = $sqlQuery->getConditions();
 
       // remove from sql
       if($tableName && ! empty($deleteConditions))
