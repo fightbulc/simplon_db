@@ -1,8 +1,8 @@
 <?php
 
-  namespace Simplon\Db;
+  namespace Simplon\Db\Library;
 
-  class MysqlLib extends \EasyPDO
+  class Mysql extends \EasyPDO
   {
     protected function __construct($connectionString, $username = NULL, $password = NULL)
     {
@@ -28,7 +28,7 @@
 
       if(! array_key_exists($poolId, \EasyPDO::$Instance))
       {
-        \EasyPDO::$Instance[$poolId] = new MysqlLib($connectionString, $username, $password);
+        \EasyPDO::$Instance[$poolId] = new Mysql($connectionString, $username, $password);
 
         // we want results back as ASSOC Array
         \EasyPDO::SetFetchMode(\EasyPDO::FETCH_MODE_ASSOCIATIVE_ARRAY);

@@ -1,8 +1,8 @@
 <?php
 
-  namespace Simplon\Db;
+  namespace Simplon\Db\Library;
 
-  class CouchbaseLib
+  class Couchbase
   {
     /** @var \Couchbase */
     protected $_instance;

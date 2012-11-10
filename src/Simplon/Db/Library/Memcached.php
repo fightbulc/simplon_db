@@ -1,8 +1,8 @@
 <?php
 
-  namespace Simplon\Db;
+  namespace Simplon\Db\Library;
 
-  class MemcachedLib
+  class Memcached
   {
     /**
      * @var \Memcached
