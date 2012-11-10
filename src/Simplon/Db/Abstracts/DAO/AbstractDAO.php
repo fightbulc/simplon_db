@@ -10,6 +10,12 @@
     /** @var string */
     protected $_idReference = '';
 
+    /** @var array */
+    protected $_fieldNames = array();
+
+    /** @var array */
+    protected $_fieldTypes = array();
+
     // ##########################################
 
     /**
@@ -43,6 +49,7 @@
      */
     protected function _setByKey($key, $value)
     {
+      $key = $this->_getFieldName($key);
       $this->_data[$key] = $value;
 
       return $this;
@@ -56,12 +63,17 @@
      */
     protected function _getByKey($key)
     {
+      $key = $this->_getFieldName($key);
+
       if(! isset($this->_data[$key]))
       {
         return NULL;
       }
 
-      return $this->_data[$key];
+      $type = $this->_fieldTypes[$key];
+      $value = $this->_data[$key];
+
+      return $this->_castTypeValue($type, $value);
     }
 
     // ##########################################
@@ -116,100 +128,76 @@
     // ##########################################
 
     /**
-     * @param $fieldValue
-     * @param string $fieldName
-     * @return bool|AbstractDAO
+     * @return array
      */
-    public function fetch($fieldValue, $fieldName = 'id')
+    protected function _getClassProperties()
     {
-      if($fieldName && $fieldValue)
+      $reflector = new \ReflectionClass($this);
+      return $reflector->getConstants();
+    }
+
+    // ##########################################
+
+    protected function _getFieldReferences()
+    {
+      $properties = $this->_getClassProperties();
+
+      foreach($properties as $name => $value)
       {
-        return $this->_get($fieldValue, $fieldName);
+        $name = strtolower($name);
+
+        if($name == 'id_reference')
+        {
+          $this->_idReference = $value;
+        }
+
+        elseif(substr($name, 0, 6) === 'field_')
+        {
+          list($fieldType, $fieldName) = explode(':', $value);
+          $this->_fieldNames[$value] = $fieldName;
+          $this->_fieldTypes[$fieldName] = $fieldType;
+        }
+      }
+    }
+
+    // ##########################################
+
+    /**
+     * @param $fieldTypeName
+     * @return mixed
+     */
+    protected function _getFieldName($fieldTypeName)
+    {
+      if(strpos($fieldTypeName, ':') !== FALSE)
+      {
+        list($type, $name) = explode(':', $fieldTypeName);
+
+        return $name;
       }
 
-      return FALSE;
+      return $fieldTypeName;
     }
 
     // ##########################################
 
     /**
-     * @param $fieldValue
-     * @param $fieldName
-     * @return AbstractDAO
+     * @param $type
+     * @param $value
+     * @return int|string
      */
-    protected function _get($fieldValue, $fieldName)
+    protected function _castTypeValue($type, $value)
     {
-      return $this;
-    }
-
-    // ##########################################
-
-    /**
-     * @return bool
-     */
-    public function create()
-    {
-      return $this->_create();
-    }
-
-    // ##########################################
-
-    /**
-     * @return bool
-     */
-    protected function _create()
-    {
-      return FALSE;
-    }
-
-    // ##########################################
-
-    /**
-     * @return bool
-     */
-    public function update()
-    {
-      if($this->_hasIdReferenceName() && $this->_hasIdReferenceValue())
+      switch($type)
       {
-        return $this->_update();
+        case 'i':
+          $value = (int)$value;
+          break;
+
+        default:
+          $value = (string)$value;
       }
 
-      return FALSE;
-    }
-
-    // ##########################################
-
-    /**
-     * @return bool
-     */
-    protected function _update()
-    {
-      return FALSE;
-    }
-
-    // ##########################################
-
-    /**
-     * @return bool
-     */
-    public function delete()
-    {
-      if($this->_hasIdReferenceName() && $this->_hasIdReferenceValue())
-      {
-        return $this->_delete();
-      }
-
-      return FALSE;
-    }
-
-    // ##########################################
-
-    /**
-     * @return bool
-     */
-    protected function _delete()
-    {
-      return FALSE;
+      return $value;
     }
 
     // ##########################################
@@ -217,8 +205,16 @@
     /**
      * @return array
      */
-    public function export()
+    protected function _getFieldReferenceNames()
     {
-      return $this->_data;
+      $_data = array();
+      $fieldNames = $this->_getFieldReferenceNames();
+
+      foreach($fieldNames as $key)
+      {
+        $_data[$key] = $this->_getByKey($key);
+      }
+
+      return $_data;
     }
   }

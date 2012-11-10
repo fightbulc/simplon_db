@@ -13,12 +13,6 @@
     /** @var string */
     protected $_tableName = '';
 
-    /** @var array */
-    protected $_fieldNames = array();
-
-    /** @var array */
-    protected $_fieldTypes = array();
-
     // ##########################################
 
     /**
@@ -56,8 +50,7 @@
 
     protected function _getFieldReferences()
     {
-      $reflector = new \ReflectionClass($this);
-      $properties = $reflector->getConstants();
+      $properties = $this->_getClassProperties();
 
       foreach($properties as $name => $value)
       {
@@ -80,86 +73,6 @@
           $this->_fieldTypes[$fieldName] = $fieldType;
         }
       }
-    }
-
-    // ##########################################
-
-    /**
-     * @param $fieldTypeName
-     * @return mixed
-     */
-    protected function _getFieldName($fieldTypeName)
-    {
-      if(strpos($fieldTypeName, ':') !== FALSE)
-      {
-        list($type, $name) = explode(':', $fieldTypeName);
-
-        return $name;
-      }
-
-      return $fieldTypeName;
-    }
-
-    // ##########################################
-
-    /**
-     * @param $key
-     * @param $value
-     * @return AbstractDAO|AbstractSqlDAO
-     */
-    protected function _setByKey($key, $value)
-    {
-      $key = $this->_getFieldName($key);
-      $this->_data[$key] = $value;
-
-      return $this;
-    }
-
-    // ##########################################
-
-    /**
-     * @param $key
-     * @return bool|int|string
-     */
-    protected function _getByKey($key)
-    {
-      $key = $this->_getFieldName($key);
-      $value = parent::_getByKey($key);
-      $type = $this->_fieldTypes[$key];
-
-      return $this->_castTypeValue($type, $value);
-    }
-
-    // ##########################################
-
-    /**
-     * @param $type
-     * @param $value
-     * @return int|string
-     */
-    protected function _castTypeValue($type, $value)
-    {
-      switch($type)
-      {
-        case 'i':
-          $value = (int)$value;
-          break;
-
-        default:
-          $value = (string)$value;
-      }
-
-      return $value;
-    }
-
-    // ##########################################
-
-    /**
-     * @return array
-     */
-    protected function _getFieldReferenceNames()
-    {
-      return $this->_fieldNames;
     }
 
     // ##########################################
@@ -234,7 +147,7 @@
      * @param $fieldTypeName
      * @return AbstractDAO|AbstractSqlDAO
      */
-    protected function _get($fieldValue, $fieldTypeName)
+    protected function fetch($fieldValue, $fieldTypeName = 'i:id')
     {
       if($this->_hasTableReferenceName() === FALSE)
       {
@@ -291,9 +204,9 @@
     // ##########################################
 
     /**
-     * @return bool
+     * @return bool|AbstractSqlDAO
      */
-    protected function _create()
+    public function create()
     {
       if($this->_hasTableReferenceName() === FALSE)
       {
@@ -320,7 +233,7 @@
       }
 
       // set insert id
-      $this->_setByKey($this->_idReference, $insertId);
+      $this->_setByKey($this->_getIdReferenceName(), $insertId);
 
       return $this;
     }
@@ -330,8 +243,28 @@
     /**
      * @return bool
      */
-    protected function _update()
+    protected function _hasReferenceIdAndValue()
     {
+      if(! $this->_hasIdReferenceName() || ! $this->_hasIdReferenceValue())
+      {
+        return FALSE;
+      }
+
+      return TRUE;
+    }
+
+    // ##########################################
+
+    /**
+     * @return bool|AbstractSqlDAO
+     */
+    public function update()
+    {
+      if($this->_hasReferenceIdAndValue() === FALSE)
+      {
+        $this->_throwException('Missing idReferences and/or idReferenceValue.');
+      }
+
       if($this->_hasTableReferenceName() === FALSE)
       {
         $this->_throwException('Missing TableReferenceName.');
@@ -364,10 +297,15 @@
     // ##########################################
 
     /**
-     * @return bool
+     * @return bool|AbstractSqlDAO
      */
-    protected function _delete()
+    public function delete()
     {
+      if($this->_hasReferenceIdAndValue() === FALSE)
+      {
+        $this->_throwException('Missing idReferences and/or idReferenceValue.');
+      }
+
       if($this->_hasTableReferenceName() === FALSE)
       {
         $this->_throwException('Missing TableReferenceName.');
@@ -393,23 +331,5 @@
       }
 
       return $this;
-    }
-
-    // ##########################################
-
-    /**
-     * @return array
-     */
-    public function export()
-    {
-      $_data = array();
-      $fieldNames = $this->_getFieldReferenceNames();
-
-      foreach($fieldNames as $key)
-      {
-        $_data[$key] = $this->_getByKey($key);
-      }
-
-      return $_data;
     }
   }

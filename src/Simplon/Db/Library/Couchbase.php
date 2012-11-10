@@ -59,7 +59,7 @@
      * @param string $cacheId
      * @return array
      */
-    public function get($cacheId)
+    public function fetch($cacheId)
     {
       $result = array();
 
@@ -81,7 +81,7 @@
      * @param $cacheIds
      * @return array
      */
-    public function getMulti($cacheIds)
+    public function fetchMulti($cacheIds)
     {
       $jsonData = $this
         ->_getCouchbaseInstance()
@@ -118,7 +118,7 @@
     {
       $jsonData = $this->_jsonEncode($data);
 
-      $this
+      return $this
         ->_getCouchbaseInstance()
         ->add($cacheId, $jsonData, $expireSeconds);
     }
@@ -138,7 +138,7 @@
         $jsonData[$key] = $this->_jsonEncode($val);
       }
 
-      $this
+      return $this
         ->_getCouchbaseInstance()
         ->setMulti($jsonData, $expireSeconds);
     }
