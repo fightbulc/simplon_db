@@ -7,8 +7,8 @@
     /** @var array */
     protected $_data = array();
 
-    /** @var string */
-    protected $_idReference = '';
+    /** @var \ReflectionClass */
+    protected $_classReflector;
 
     /** @var array */
     protected $_fieldNames = array();
@@ -79,55 +79,6 @@
     // ##########################################
 
     /**
-     * @return string
-     */
-    protected function _getIdReferenceName()
-    {
-      if(empty($this->_idReference))
-      {
-        $this->_throwException(__CLASS__ . ': idReferenceName is missing.');
-      }
-
-      return $this->_idReference;
-    }
-
-    // ##########################################
-
-    /**
-     * @return bool
-     */
-    protected function _hasIdReferenceName()
-    {
-      $idName = $this->_getIdReferenceName();
-
-      return ! empty($idName);
-    }
-
-    // ##########################################
-
-    /**
-     * @return bool|mixed
-     */
-    protected function _getIdReferenceValue()
-    {
-      return $this->_getByKey($this->_getIdReferenceName());
-    }
-
-    // ##########################################
-
-    /**
-     * @return bool
-     */
-    protected function _hasIdReferenceValue()
-    {
-      $idValue = $this->_getIdReferenceValue();
-
-      return ! empty($idValue);
-    }
-
-    // ##########################################
-
-    /**
      * @return array
      */
     protected function _getClassProperties()
@@ -147,12 +98,7 @@
       {
         $name = strtolower($name);
 
-        if($name == 'id_reference')
-        {
-          $this->_idReference = $value;
-        }
-
-        elseif(substr($name, 0, 6) === 'field_')
+        if(substr($name, 0, 6) === 'field_')
         {
           list($fieldType, $fieldName) = explode(':', $value);
           $this->_fieldNames[$value] = $fieldName;

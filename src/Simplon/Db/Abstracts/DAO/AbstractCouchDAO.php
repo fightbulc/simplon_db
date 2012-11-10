@@ -8,13 +8,10 @@
     protected $_couchManagerInstance;
 
     /** @var string */
-    protected $_idReference = '';
+    protected $_couchIdPrefix = '';
 
-    /** @var array */
-    protected $_fieldNames = array();
-
-    /** @var array */
-    protected $_fieldTypes = array();
+    /** @var string */
+    protected $_couchId = '';
 
     // ##########################################
 
@@ -51,15 +48,104 @@
 
     // ##########################################
 
+    protected function _getFieldReferences()
+    {
+      // get field references
+      parent::_getFieldReferences();
+
+      // get id and table reference
+      $properties = $this->_getClassProperties();
+
+      foreach($properties as $name => $value)
+      {
+        $name = strtolower($name);
+
+        if($name == 'couchid_prefix')
+        {
+          $this->_couchIdPrefix = $value;
+          break;
+        }
+      }
+    }
+
+    // ##########################################
+
+    /**
+     * @param $couchId
+     * @return AbstractCouchDAO
+     */
+    public function setCouchId($couchId)
+    {
+      $this->_couchId = $couchId;
+
+      return $this;
+    }
+
+    // ##########################################
+
+    /**
+     * @return bool|string
+     */
+    protected function _getCouchId()
+    {
+      return $this->_couchId;
+    }
+
+    // ##########################################
+
+    /**
+     * @return string
+     */
+    protected function _getCouchIdPrefix()
+    {
+      if(empty($this->_couchIdPrefix))
+      {
+        return "";
+      }
+
+      return $this->_couchIdPrefix . '_';
+    }
+
+    // ##########################################
+
+    /**
+     * @return bool|string
+     */
+    protected function _getPrefixedCouchId()
+    {
+      $couchId = $this->_getCouchId();
+
+      if(empty($couchId))
+      {
+        return FALSE;
+      }
+
+      return $this->_couchIdPrefix . $couchId;
+    }
+
+    // ##########################################
+
     /**
      * @param $couchId
      * @return bool|AbstractCouchDAO|AbstractDAO
      */
     public function fetch($couchId)
     {
-      // build query
+      // set couchId
+      $this->setCouchId($couchId);
+
+      // get prefixed couchId
+      $couchIdPrefixed = $this->_getPrefixedCouchId();
+
+      // return if no ID
+      if($couchIdPrefixed === FALSE)
+      {
+        return FALSE;
+      }
+
+      // build couch query
       $couchQuery = \Simplon\Db\CouchQueryBuilder::init()
-        ->setId($couchId);
+        ->setId($couchIdPrefixed);
 
       // fetch row
       $result = $this
@@ -106,9 +192,18 @@
       // prepare data
       $preparedData = $this->_getPreparedCreateUpdateData();
 
-      // build query
+      // get prefixed couchId
+      $couchIdPrefixed = $this->_getPrefixedCouchId();
+
+      // return if no ID
+      if($couchIdPrefixed === FALSE)
+      {
+        return FALSE;
+      }
+
+      // build couch query
       $couchQuery = \Simplon\Db\CouchQueryBuilder::init()
-        ->setId($this->_getIdReferenceValue())
+        ->setId($couchIdPrefixed)
         ->setData($preparedData);
 
       // save
@@ -132,8 +227,18 @@
      */
     public function delete()
     {
+      // get prefixed couchId
+      $couchIdPrefixed = $this->_getPrefixedCouchId();
+
+      // return if no ID
+      if($couchIdPrefixed === FALSE)
+      {
+        return FALSE;
+      }
+
+      // build couch query
       $couchQuery = \Simplon\Db\CouchQueryBuilder::init()
-        ->setId($this->_getIdReferenceValue());
+        ->setId($couchIdPrefixed);
 
       // remove
       $response = $this

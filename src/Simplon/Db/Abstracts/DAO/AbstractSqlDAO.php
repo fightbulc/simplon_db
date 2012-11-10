@@ -48,8 +48,61 @@
 
     // ##########################################
 
+    /**
+     * @return string
+     */
+    protected function _getIdReferenceName()
+    {
+      if(empty($this->_idReference))
+      {
+        $this->_throwException(__CLASS__ . ': idReferenceName is missing.');
+      }
+
+      return $this->_idReference;
+    }
+
+    // ##########################################
+
+    /**
+     * @return bool
+     */
+    protected function _hasIdReferenceName()
+    {
+      $idName = $this->_getIdReferenceName();
+
+      return ! empty($idName);
+    }
+
+    // ##########################################
+
+    /**
+     * @return bool|mixed
+     */
+    protected function _getIdReferenceValue()
+    {
+      return $this->_getByKey($this->_getIdReferenceName());
+    }
+
+    // ##########################################
+
+    /**
+     * @return bool
+     */
+    protected function _hasIdReferenceValue()
+    {
+      $idValue = $this->_getIdReferenceValue();
+
+      return ! empty($idValue);
+    }
+
+    // ##########################################
+
     protected function _getFieldReferences()
     {
+      // get field references
+      parent::_getFieldReferences();
+
+      // get id and table reference
       $properties = $this->_getClassProperties();
 
       foreach($properties as $name => $value)
@@ -64,13 +117,6 @@
         elseif($name == 'table_name')
         {
           $this->_tableName = $value;
-        }
-
-        elseif(substr($name, 0, 6) === 'field_')
-        {
-          list($fieldType, $fieldName) = explode(':', $value);
-          $this->_fieldNames[$value] = $fieldName;
-          $this->_fieldTypes[$fieldName] = $fieldType;
         }
       }
     }
