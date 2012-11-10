@@ -133,6 +133,7 @@
     protected function _getClassProperties()
     {
       $reflector = new \ReflectionClass($this);
+
       return $reflector->getConstants();
     }
 
@@ -206,6 +207,13 @@
      * @return array
      */
     protected function _getFieldReferenceNames()
+    {
+      return $this->_fieldNames;
+    }
+
+    // ##########################################
+
+    public function export()
     {
       $_data = array();
       $fieldNames = $this->_getFieldReferenceNames();

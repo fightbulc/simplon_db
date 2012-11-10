@@ -56,30 +56,28 @@
     // ########################################
 
     /**
-     * @param string $cacheId
-     * @return array
+     * @param $cacheId
+     * @return bool|mixed
      */
     public function fetch($cacheId)
     {
-      $result = array();
-
       $jsonData = $this
         ->_getCouchbaseInstance()
         ->get($cacheId);
 
       if(! empty($jsonData))
       {
-        $result = $this->_jsonDecodeAsArray($jsonData);
+        return $this->_jsonDecodeAsArray($jsonData);
       }
 
-      return $result;
+      return FALSE;
     }
 
     // ########################################
 
     /**
      * @param $cacheIds
-     * @return array
+     * @return bool|mixed
      */
     public function fetchMulti($cacheIds)
     {
@@ -87,7 +85,12 @@
         ->_getCouchbaseInstance()
         ->getMulti($cacheIds);
 
-      return $this->_jsonDecodeAsArray($jsonData);
+      if(! empty($jsonData))
+      {
+        return $this->_jsonDecodeAsArray($jsonData);
+      }
+
+      return FALSE;
     }
 
     // ########################################

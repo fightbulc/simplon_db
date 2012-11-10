@@ -35,11 +35,9 @@
      */
     public function fetch(CouchQueryBuilder $couchQuery)
     {
-      $result = $this
+      return $this
         ->_getCouchbaseInstance()
         ->fetch($couchQuery->getId());
-
-      return $result;
     }
 
     // ########################################
@@ -50,11 +48,9 @@
      */
     public function fetchMulti(CouchQueryBuilder $couchQuery)
     {
-      $result = $this
+      return $this
         ->_getCouchbaseInstance()
         ->fetchMulti($couchQuery->getIdsMany());
-
-      return $result;
     }
 
     // ########################################
@@ -65,11 +61,9 @@
      */
     public function set(CouchQueryBuilder $couchQuery)
     {
-      $result = $this
+      return $this
         ->_getCouchbaseInstance()
         ->set($couchQuery->getId(), $couchQuery->getData());
-
-      return $result;
     }
 
     // ########################################
@@ -80,11 +74,9 @@
      */
     public function setMulti(CouchQueryBuilder $couchQuery)
     {
-      $result = $this
+      return $this
         ->_getCouchbaseInstance()
         ->setMulti($couchQuery->getDataMany());
-
-      return $result;
     }
 
     // ########################################
@@ -95,11 +87,9 @@
      */
     public function delete(CouchQueryBuilder $couchQuery)
     {
-      $result = $this
+      return $this
         ->_getCouchbaseInstance()
         ->delete($couchQuery->getId());
-
-      return $result;
     }
 
     // ########################################
@@ -110,10 +100,8 @@
      */
     public function getView(CouchQueryBuilder $couchQuery)
     {
-      $result = $this
+      return $this
         ->_getCouchbaseInstance()
         ->getView($couchQuery->getViewDocName(), $couchQuery->getViewId(), $couchQuery->getViewFilter());
-
-      return $result;
     }
   }

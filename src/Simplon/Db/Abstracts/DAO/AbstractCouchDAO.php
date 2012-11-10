@@ -101,7 +101,7 @@
     /**
      * @return bool
      */
-    protected function save()
+    public function save()
     {
       // prepare data
       $preparedData = $this->_getPreparedCreateUpdateData();
@@ -130,7 +130,7 @@
     /**
      * @return bool
      */
-    protected function _delete()
+    public function delete()
     {
       $couchQuery = \Simplon\Db\CouchQueryBuilder::init()
         ->setId($this->_getIdReferenceValue());
