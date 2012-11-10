@@ -1,32 +1,30 @@
 <?php
 
-  namespace Simplon\Db\Abstracts;
+  namespace Simplon\Db;
 
-  abstract class AbstractSqlManager
+  class SqlManager
   {
+    /** @var \Simplon\Db\Library\Mysql */
+    protected $_mysqlInstance;
+
+    // ########################################
+
     /**
-     * @return array
+     * @param \Simplon\Db\Library\Mysql $mysqlInstance
      */
-    protected function getMysqlConfig()
+    public function __construct(\Simplon\Db\Library\Mysql $mysqlInstance)
     {
-      return array(
-        'server'   => '',
-        'database' => '',
-        'username' => '',
-        'password' => '',
-      );
+      $this->_mysqlInstance = $mysqlInstance;
     }
 
     // ########################################
 
     /**
-     * @return \Simplon\Db\MysqlLib
+     * @return \Simplon\Db\Library\Mysql
      */
-    private function getSqlInstance()
+    protected function _getSqlInstance()
     {
-      $config = $this->getMysqlConfig();
-
-      return \Simplon\Db\DbInstance::MySQL($config['server'], $config['database'], $config['username'], $config['password']);
+      return $this->_mysqlInstance;
     }
 
     // ########################################
@@ -35,10 +33,10 @@
      * @param \Simplon\Db\SqlQueryBuilder $sqlQuery
      * @return null
      */
-    protected function fetchColumn(\Simplon\Db\SqlQueryBuilder $sqlQuery)
+    public function fetchColumn(\Simplon\Db\SqlQueryBuilder $sqlQuery)
     {
       return $this
-        ->getSqlInstance()
+        ->_getSqlInstance()
         ->FetchValue($sqlQuery->getQuery(), $sqlQuery->getConditions());
     }
 
@@ -48,10 +46,10 @@
      * @param \Simplon\Db\SqlQueryBuilder $sqlQuery
      * @return mixed
      */
-    protected function fetchRow(\Simplon\Db\SqlQueryBuilder $sqlQuery)
+    public function fetchRow(\Simplon\Db\SqlQueryBuilder $sqlQuery)
     {
       $result = $this
-        ->getSqlInstance()
+        ->_getSqlInstance()
         ->FetchArray($sqlQuery->getQuery(), $sqlQuery->getConditions());
 
       return $result;
@@ -63,10 +61,10 @@
      * @param \Simplon\Db\SqlQueryBuilder $sqlQuery
      * @return mixed
      */
-    protected function fetchAll(\Simplon\Db\SqlQueryBuilder $sqlQuery)
+    public function fetchAll(\Simplon\Db\SqlQueryBuilder $sqlQuery)
     {
       $result = $this
-        ->getSqlInstance()
+        ->_getSqlInstance()
         ->FetchAll($sqlQuery->getQuery(), $sqlQuery->getConditions());
 
       return $result;
@@ -78,7 +76,7 @@
      * @param \Simplon\Db\SqlQueryBuilder $sqlQuery
      * @return bool|null|string
      */
-    protected function insert(\Simplon\Db\SqlQueryBuilder $sqlQuery)
+    public function insert(\Simplon\Db\SqlQueryBuilder $sqlQuery)
     {
       $tableName = $sqlQuery->getTableName();
       $data = $sqlQuery->getData();
@@ -121,7 +119,7 @@
 
         // insert data
         $insertId = $this
-          ->getSqlInstance()
+          ->_getSqlInstance()
           ->ExecuteSQL($sql, $_values);
 
         return $insertId;
@@ -136,7 +134,7 @@
      * @param \Simplon\Db\SqlQueryBuilder $sqlQuery
      * @return bool|null|string
      */
-    protected function update(\Simplon\Db\SqlQueryBuilder $sqlQuery)
+    public function update(\Simplon\Db\SqlQueryBuilder $sqlQuery)
     {
       $tableName = $sqlQuery->getTableName();
       $newData = $sqlQuery->getData();
@@ -184,7 +182,7 @@
 
         // update data
         return $this
-          ->getSqlInstance()
+          ->_getSqlInstance()
           ->ExecuteSQL($sql, $_values);
       }
 
@@ -197,7 +195,7 @@
      * @param \Simplon\Db\SqlQueryBuilder $sqlQuery
      * @return bool|null|string
      */
-    protected function remove(\Simplon\Db\SqlQueryBuilder $sqlQuery)
+    public function remove(\Simplon\Db\SqlQueryBuilder $sqlQuery)
     {
       $tableName = $sqlQuery->getTableName();
       $deleteConditions = $sqlQuery->getConditions();
@@ -231,7 +229,7 @@
 
         // remove data
         return $this
-          ->getSqlInstance()
+          ->_getSqlInstance()
           ->ExecuteSQL($sql, $_values);
       }
 
