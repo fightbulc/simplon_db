@@ -261,7 +261,7 @@
       // no result exception
       if($result === FALSE)
       {
-        $this->_throwException('No result could be fetched for the "' . $this->_getIdReferenceName() . '" of "' . $this->_getIdReferenceValue() . '"');
+        return FALSE;
       }
 
       // set data
@@ -316,8 +316,7 @@
       // no result exception
       if($insertId === FALSE)
       {
-        $_data = array('data' => $preparedData);
-        $this->_throwException('Data for table "' . $this->_getTableReferenceName() . '" couldn\'t be created: ' . json_encode($_data));
+        return FALSE;
       }
 
       // set insert id
@@ -356,8 +355,7 @@
       // no result exception
       if($response === FALSE)
       {
-        $_data = array('conditions' => $conditions, 'data' => $preparedData);
-        $this->_throwException('Data for table "' . $this->_getTableReferenceName() . '" couldn\'t be updated: ' . json_encode($_data));
+        return FALSE;
       }
 
       return $this;
@@ -391,8 +389,7 @@
       // no result exception
       if($response === FALSE)
       {
-        $_data = array('conditions' => $conditions);
-        $this->_throwException('Data for table "' . $this->_getTableReferenceName() . '" couldn\'t be deleted: ' . json_encode($_data));
+        return FALSE;
       }
 
       return $this;
