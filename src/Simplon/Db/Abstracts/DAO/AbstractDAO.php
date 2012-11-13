@@ -19,6 +19,16 @@
     // ##########################################
 
     /**
+     * @return AbstractDAO
+     */
+    public static function init()
+    {
+      return new static;
+    }
+
+    // ##########################################
+
+    /**
      * @param $message
      * @throws \Exception
      */
@@ -33,7 +43,7 @@
      * @param array $rawData
      * @return AbstractDAO
      */
-    protected function _setData(array $rawData)
+    public function setData(array $rawData)
     {
       $this->_data = $rawData;
 
@@ -138,6 +148,14 @@
       {
         case 'i':
           $value = (int)$value;
+          break;
+
+        case 'b':
+          $value = (bool)$value;
+          break;
+
+        case 'a':
+          $value = (array)$value;
           break;
 
         default:
