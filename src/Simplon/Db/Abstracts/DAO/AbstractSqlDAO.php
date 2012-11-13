@@ -2,7 +2,7 @@
 
   namespace Simplon\Db\Abstracts\DAO;
 
-  abstract class AbstractSqlDAO extends AbstractDAO
+  class AbstractSqlDAO extends AbstractDAO
   {
     /** @var \Simplon\Db\SqlManager */
     protected $_sqlManagerInstance;
@@ -224,7 +224,7 @@
       }
 
       // set data
-      $this->_setData($result);
+      $this->setData($result);
 
       return $this;
     }
