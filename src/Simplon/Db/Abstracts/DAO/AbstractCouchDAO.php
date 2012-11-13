@@ -2,16 +2,16 @@
 
   namespace Simplon\Db\Abstracts\DAO;
 
-  abstract class AbstractCouchDAO extends AbstractDAO
+  class AbstractCouchDAO extends AbstractDAO
   {
     /** @var \Simplon\Db\CouchbaseManager */
     protected $_couchManagerInstance;
 
     /** @var string */
-    protected $_couchIdPrefix = '';
-
-    /** @var string */
     protected $_couchId = '';
+
+    /** @var int */
+    protected $_expiresTime = '0s';
 
     // ##########################################
 
@@ -60,10 +60,9 @@
       {
         $name = strtolower($name);
 
-        if($name == 'couchid_prefix')
+        if($name == 'expires')
         {
-          $this->_couchIdPrefix = $value;
-          break;
+          $this->_expiresTime = $value;
         }
       }
     }
@@ -71,12 +70,12 @@
     // ##########################################
 
     /**
-     * @param $couchId
+     * @param $userId
      * @return AbstractCouchDAO
      */
-    public function setCouchId($couchId)
+    public function setCouchId($userId)
     {
-      $this->_couchId = $couchId;
+      $this->_couchId = $userId;
 
       return $this;
     }
@@ -86,7 +85,7 @@
     /**
      * @return bool|string
      */
-    protected function _getCouchId()
+    public function getCouchId()
     {
       return $this->_couchId;
     }
@@ -94,33 +93,46 @@
     // ##########################################
 
     /**
-     * @return string
+     * @return int
      */
-    protected function _getCouchIdPrefix()
+    protected function _getExpiresTime()
     {
-      if(empty($this->_couchIdPrefix))
+      $time = $this->_expiresTime;
+
+      if($time === 0)
       {
-        return "";
+        return $time;
       }
 
-      return $this->_couchIdPrefix . '_';
-    }
+      // separate timeUnit from interval
+      $timeUnit = strtolower(substr($time, - 1, 1));
 
-    // ##########################################
+      // cast interval
+      $interval = (int)str_replace($timeUnit, '', $time);
 
-    /**
-     * @return bool|string
-     */
-    protected function _getPrefixedCouchId()
-    {
-      $couchId = $this->_getCouchId();
-
-      if(empty($couchId))
+      switch($timeUnit)
       {
-        return FALSE;
+        case 'm':
+          $timeInSeconds = 60 * $interval;
+          break;
+
+        case 'h':
+          $timeInSeconds = 60 * 60 * $interval;
+          break;
+
+        case 'd':
+          $timeInSeconds = 60 * 60 * 24 * $interval;
+          break;
+
+        case 'w':
+          $timeInSeconds = 60 * 60 * 24 * 7 * $interval;
+          break;
+
+        default:
+          $timeInSeconds = $interval;
       }
 
-      return $this->_couchIdPrefix . $couchId;
+      return $timeInSeconds;
     }
 
     // ##########################################
@@ -134,18 +146,9 @@
       // set couchId
       $this->setCouchId($couchId);
 
-      // get prefixed couchId
-      $couchIdPrefixed = $this->_getPrefixedCouchId();
-
-      // return if no ID
-      if($couchIdPrefixed === FALSE)
-      {
-        return FALSE;
-      }
-
       // build couch query
       $couchQuery = \Simplon\Db\CouchQueryBuilder::init()
-        ->setId($couchIdPrefixed);
+        ->setId($this->getCouchId());
 
       // fetch row
       $result = $this
@@ -159,7 +162,7 @@
       }
 
       // set data
-      $this->_setData($result);
+      $this->setData($result);
 
       return $this;
     }
@@ -192,18 +195,19 @@
       // prepare data
       $preparedData = $this->_getPreparedCreateUpdateData();
 
-      // get prefixed couchId
-      $couchIdPrefixed = $this->_getPrefixedCouchId();
+      // get couchId
+      $couchId = $this->getCouchId();
 
       // return if no ID
-      if($couchIdPrefixed === FALSE)
+      if($couchId === FALSE)
       {
         return FALSE;
       }
 
       // build couch query
       $couchQuery = \Simplon\Db\CouchQueryBuilder::init()
-        ->setId($couchIdPrefixed)
+        ->setId($couchId)
+        ->setExpirationInSeconds($this->_getExpiresTime())
         ->setData($preparedData);
 
       // save
@@ -217,7 +221,7 @@
         return FALSE;
       }
 
-      return $this;
+      return TRUE;
     }
 
     // ##########################################
@@ -227,18 +231,18 @@
      */
     public function delete()
     {
-      // get prefixed couchId
-      $couchIdPrefixed = $this->_getPrefixedCouchId();
+      // get couchId
+      $couchId = $this->getCouchId();
 
       // return if no ID
-      if($couchIdPrefixed === FALSE)
+      if($couchId === FALSE)
       {
         return FALSE;
       }
 
       // build couch query
       $couchQuery = \Simplon\Db\CouchQueryBuilder::init()
-        ->setId($couchIdPrefixed);
+        ->setId($couchId);
 
       // remove
       $response = $this
@@ -251,6 +255,6 @@
         return FALSE;
       }
 
-      return $this;
+      return TRUE;
     }
   }
