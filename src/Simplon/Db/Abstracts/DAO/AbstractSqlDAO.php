@@ -30,6 +30,7 @@
 
     /**
      * @param $message
+     * @return \Exception|void
      */
     protected function _throwException($message)
     {
@@ -80,7 +81,7 @@
      */
     protected function _getIdReferenceValue()
     {
-      return $this->_getByKey($this->_getIdReferenceName());
+      return $this->_getByKeyCasted($this->_getIdReferenceName());
     }
 
     // ##########################################
@@ -241,7 +242,7 @@
 
       foreach($fieldReferenceNames as $key)
       {
-        $data[$key] = $this->_getByKey($key);
+        $data[$key] = $this->_getByKeyCasted($key);
       }
 
       return $data;
