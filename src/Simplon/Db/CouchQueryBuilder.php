@@ -5,10 +5,13 @@
   class CouchQueryBuilder
   {
     /** @var string */
-    protected $_cacheId = '';
+    protected $_id = '';
+
+    /** @var string */
+    protected $_idTemplate = '{{id}}';
 
     /** @var array */
-    protected $_cacheIdsMany = array();
+    protected $_idsMany = array();
 
     /** @var array */
     protected $_data = array();
@@ -41,12 +44,37 @@
     // ##########################################
 
     /**
-     * @param $cacheId
+     * @param $id
+     * @param $idTemplate
+     * @return mixed
+     */
+    protected function _parseIdTemplate($id, $idTemplate)
+    {
+      return str_replace('{{id}}', $id, $idTemplate);
+    }
+
+    // ##########################################
+
+    /**
+     * @param $idTemplate
      * @return CouchQueryBuilder
      */
-    public function setId($cacheId)
+    public function setIdTemplate($idTemplate)
     {
-      $this->_cacheId = $cacheId;
+      $this->_idTemplate = $idTemplate;
+
+      return $this;
+    }
+
+    // ##########################################
+
+    /**
+     * @param $id
+     * @return CouchQueryBuilder
+     */
+    public function setId($id)
+    {
+      $this->_id = $id;
 
       return $this;
     }
@@ -58,18 +86,18 @@
      */
     public function getId()
     {
-      return $this->_cacheId;
+      return $this->_parseIdTemplate($this->_id, $this->_idTemplate);
     }
 
     // ##########################################
 
     /**
-     * @param array $cacheIdsMany
+     * @param array $idsMany
      * @return CouchQueryBuilder
      */
-    public function setIdsMany(array $cacheIdsMany)
+    public function setIdsMany(array $idsMany)
     {
-      $this->_cacheIdsMany = $cacheIdsMany;
+      $this->_idsMany = $idsMany;
 
       return $this;
     }
@@ -81,7 +109,14 @@
      */
     public function getIdsMany()
     {
-      return $this->_cacheIdsMany;
+      $_idsMany = array();
+
+      foreach($this->_idsMany as $id)
+      {
+        $_idsMany[] = $this->_parseIdTemplate($id, $this->_idTemplate);
+      }
+
+      return $_idsMany;
     }
 
     // ##########################################
