@@ -10,8 +10,11 @@
     /** @var string */
     protected $_couchId = '';
 
+    /** @var string */
+    protected $_couchIdTemplate = '{{value}}';
+
     /** @var int */
-    protected $_expiresTime = '0s';
+    protected $_expiresTime = 0;
 
     // ##########################################
 
@@ -40,10 +43,11 @@
 
     /**
      * @param $message
+     * @return \Exception
      */
     protected function _throwException($message)
     {
-      parent::_throwException(__CLASS__ . ': ' . $message);
+      return parent::_throwException(__CLASS__ . ': ' . $message);
     }
 
     // ##########################################
@@ -60,7 +64,12 @@
       {
         $name = strtolower($name);
 
-        if($name == 'expires')
+        if($name == 'id_template')
+        {
+          $this->_couchIdTemplate = $value;
+        }
+
+        elseif($name == 'expires')
         {
           $this->_expiresTime = $value;
         }
@@ -70,12 +79,12 @@
     // ##########################################
 
     /**
-     * @param $userId
+     * @param $artistId
      * @return AbstractCouchDAO
      */
-    public function setCouchId($userId)
+    public function setCouchId($artistId)
     {
-      $this->_couchId = $userId;
+      $this->_couchId = $artistId;
 
       return $this;
     }
@@ -88,6 +97,16 @@
     public function getCouchId()
     {
       return $this->_couchId;
+    }
+
+    // ##########################################
+
+    /**
+     * @return bool|string
+     */
+    public function getCouchIdTemplate()
+    {
+      return $this->_couchIdTemplate;
     }
 
     // ##########################################
@@ -148,7 +167,8 @@
 
       // build couch query
       $couchQuery = \Simplon\Db\CouchQueryBuilder::init()
-        ->setId($this->getCouchId());
+        ->setId($this->getCouchId())
+        ->setIdTemplate($this->getCouchIdTemplate());
 
       // fetch row
       $result = $this
@@ -207,6 +227,7 @@
       // build couch query
       $couchQuery = \Simplon\Db\CouchQueryBuilder::init()
         ->setId($couchId)
+        ->setIdTemplate($this->getCouchIdTemplate())
         ->setExpirationInSeconds($this->_getExpiresTime())
         ->setData($preparedData);
 
@@ -242,7 +263,8 @@
 
       // build couch query
       $couchQuery = \Simplon\Db\CouchQueryBuilder::init()
-        ->setId($couchId);
+        ->setId($couchId)
+        ->setIdTemplate($this->getCouchIdTemplate());
 
       // remove
       $response = $this
