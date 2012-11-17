@@ -31,39 +31,60 @@
 
     /**
      * @param CouchQueryBuilder $couchQuery
-     * @return array
+     * @return bool|mixed
      */
     public function fetch(CouchQueryBuilder $couchQuery)
     {
-      return $this
+      $result = $this
         ->_getCouchbaseInstance()
         ->fetch($couchQuery->getId());
+
+      if($result !== FALSE)
+      {
+        return $result;
+      }
+
+      return FALSE;
     }
 
     // ########################################
 
     /**
      * @param CouchQueryBuilder $couchQuery
-     * @return array
+     * @return bool|array
      */
     public function fetchMulti(CouchQueryBuilder $couchQuery)
     {
-      return $this
+      $result = $this
         ->_getCouchbaseInstance()
         ->fetchMulti($couchQuery->getIdsMany());
+
+      if($result !== FALSE)
+      {
+        return $result;
+      }
+
+      return FALSE;
     }
 
     // ########################################
 
     /**
      * @param CouchQueryBuilder $couchQuery
-     * @return mixed
+     * @return bool|string
      */
     public function set(CouchQueryBuilder $couchQuery)
     {
-      return $this
+      $binaryObjectId = $this
         ->_getCouchbaseInstance()
-        ->set($couchQuery->getId(), $couchQuery->getData());
+        ->set($couchQuery->getId(), $couchQuery->getData(), $couchQuery->getExpirationInSeconds());
+
+      if(! empty($binaryObjectId))
+      {
+        return (string)$binaryObjectId;
+      }
+
+      return FALSE;
     }
 
     // ########################################
@@ -76,7 +97,7 @@
     {
       return $this
         ->_getCouchbaseInstance()
-        ->setMulti($couchQuery->getDataMany());
+        ->setMulti($couchQuery->getDataMany(), $couchQuery->getExpirationInSeconds());
     }
 
     // ########################################
@@ -90,6 +111,24 @@
       return $this
         ->_getCouchbaseInstance()
         ->delete($couchQuery->getId());
+    }
+
+    // ########################################
+
+    /**
+     * @param CouchQueryBuilder $couchQuery
+     * @return bool
+     */
+    public function flushBucket(CouchQueryBuilder $couchQuery)
+    {
+      if($couchQuery->getFlushConfirmation())
+      {
+        return $this
+          ->_getCouchbaseInstance()
+          ->flush();
+      }
+
+      return FALSE;
     }
 
     // ########################################
