@@ -31,6 +31,9 @@
     /** @var array */
     protected $_viewFilter = array();
 
+    /** @var int */
+    protected $_flushConfirmation = FALSE;
+
     // ##########################################
 
     /**
@@ -186,6 +189,29 @@
     public function getExpirationInSeconds()
     {
       return $this->_expirationInSeconds;
+    }
+
+    // ##########################################
+
+    /**
+     * @param $use
+     * @return CouchQueryBuilder
+     */
+    public function setFlushConfirmation($use)
+    {
+      $this->_flushConfirmation = $use !== TRUE ? FALSE : TRUE;
+
+      return $this;
+    }
+
+    // ##########################################
+
+    /**
+     * @return bool|int
+     */
+    public function getFlushConfirmation()
+    {
+      return $this->_flushConfirmation;
     }
 
     // ##########################################
