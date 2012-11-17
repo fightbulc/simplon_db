@@ -77,6 +77,10 @@
           $value = (bool)$value;
           break;
 
+        case 'f':
+          $value = (float)$value;
+          break;
+
         case 'a':
           $value = (array)$value;
           break;
