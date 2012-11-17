@@ -40,6 +40,57 @@
     // ##########################################
 
     /**
+     * @param $key
+     * @return array|bool|int|null|string
+     */
+    protected function _getByKeyCasted($key)
+    {
+      $key = $this->_getFieldName($key);
+
+      if(! isset($this->_data[$key]))
+      {
+        return NULL;
+      }
+
+      $type = $this->_fieldTypes[$key];
+      $value = $this->_data[$key];
+
+      return $this->_castTypeValue($type, $value);
+    }
+
+    // ##########################################
+
+    /**
+     * @param $type
+     * @param $value
+     * @return array|bool|int|string
+     */
+    protected function _castTypeValue($type, $value)
+    {
+      switch($type)
+      {
+        case 'i':
+          $value = (int)$value;
+          break;
+
+        case 'b':
+          $value = (bool)$value;
+          break;
+
+        case 'a':
+          $value = (array)$value;
+          break;
+
+        default:
+          $value = (string)$value;
+      }
+
+      return $value;
+    }
+
+    // ##########################################
+
+    /**
      * @return \Simplon\Db\SqlManager
      */
     protected function _getSqlManagerInstance()
