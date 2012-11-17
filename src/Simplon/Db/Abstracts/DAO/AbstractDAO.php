@@ -19,7 +19,7 @@
     // ##########################################
 
     /**
-     * @return AbstractDAO
+     * @return \App\DAO\User\UserCouchDAO
      */
     public static function init()
     {
@@ -53,6 +53,16 @@
     // ##########################################
 
     /**
+     * @return array
+     */
+    public function getData()
+    {
+      return $this->_data;
+    }
+
+    // ##########################################
+
+    /**
      * @param $key
      * @param $value
      * @return AbstractDAO
@@ -69,9 +79,34 @@
 
     /**
      * @param $key
-     * @return bool
+     * @return array|null|string
      */
     protected function _getByKey($key)
+    {
+      $key = $this->_getFieldName($key);
+
+      if(! isset($this->_data[$key]))
+      {
+        return NULL;
+      }
+
+      $value = $this->_data[$key];
+
+      if(! is_array($value))
+      {
+        $value = (string)$value;
+      }
+
+      return $value;
+    }
+
+    // ##########################################
+
+    /**
+     * @param $key
+     * @return array|bool|int|null|string
+     */
+    protected function _getByKeyCasted($key)
     {
       $key = $this->_getFieldName($key);
 
@@ -140,7 +175,7 @@
     /**
      * @param $type
      * @param $value
-     * @return int|string
+     * @return array|bool|int|string
      */
     protected function _castTypeValue($type, $value)
     {
@@ -173,20 +208,5 @@
     protected function _getFieldReferenceNames()
     {
       return $this->_fieldNames;
-    }
-
-    // ##########################################
-
-    public function export()
-    {
-      $_data = array();
-      $fieldNames = $this->_getFieldReferenceNames();
-
-      foreach($fieldNames as $key)
-      {
-        $_data[$key] = $this->_getByKey($key);
-      }
-
-      return $_data;
     }
   }
