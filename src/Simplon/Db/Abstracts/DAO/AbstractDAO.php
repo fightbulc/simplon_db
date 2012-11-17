@@ -19,7 +19,7 @@
     // ##########################################
 
     /**
-     * @return \App\DAO\User\UserCouchDAO
+     * @return AbstractDAO
      */
     public static function init()
     {
