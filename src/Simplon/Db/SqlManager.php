@@ -10,7 +10,7 @@
     // ########################################
 
     /**
-     * @param \Simplon\Db\Library\Mysql $mysqlInstance
+     * @param Library\Mysql $mysqlInstance
      */
     public function __construct(\Simplon\Db\Library\Mysql $mysqlInstance)
     {
@@ -20,7 +20,7 @@
     // ########################################
 
     /**
-     * @return \Simplon\Db\Library\Mysql
+     * @return Library\Mysql
      */
     protected function _getSqlInstance()
     {
@@ -30,21 +30,41 @@
     // ########################################
 
     /**
-     * @param \Simplon\Db\SqlQueryBuilder $sqlQuery
-     * @return null
+     * @param SqlQueryBuilder $sqlQuery
+     * @return \QueryResultIterator|\QueryResultIteratorClass
      */
-    public function fetchColumn(\Simplon\Db\SqlQueryBuilder $sqlQuery)
+    public function fetchCursor(\Simplon\Db\SqlQueryBuilder $sqlQuery)
     {
       return $this
         ->_getSqlInstance()
-        ->FetchValue($sqlQuery->getQuery(), $sqlQuery->getConditions());
+        ->Fetch($sqlQuery->getQuery(), $sqlQuery->getConditions());
     }
 
     // ########################################
 
     /**
-     * @param \Simplon\Db\SqlQueryBuilder $sqlQuery
-     * @return mixed
+     * @param SqlQueryBuilder $sqlQuery
+     * @return bool|mixed
+     */
+    public function fetchColumn(\Simplon\Db\SqlQueryBuilder $sqlQuery)
+    {
+      $result = $this
+        ->_getSqlInstance()
+        ->FetchValue($sqlQuery->getQuery(), $sqlQuery->getConditions());
+
+      if(! is_null($result))
+      {
+        return $result;
+      }
+
+      return FALSE;
+    }
+
+    // ########################################
+
+    /**
+     * @param SqlQueryBuilder $sqlQuery
+     * @return bool|array
      */
     public function fetchRow(\Simplon\Db\SqlQueryBuilder $sqlQuery)
     {
@@ -52,14 +72,19 @@
         ->_getSqlInstance()
         ->FetchArray($sqlQuery->getQuery(), $sqlQuery->getConditions());
 
-      return $result;
+      if($result !== FALSE)
+      {
+        return $result;
+      }
+
+      return FALSE;
     }
 
     // ########################################
 
     /**
-     * @param \Simplon\Db\SqlQueryBuilder $sqlQuery
-     * @return mixed
+     * @param SqlQueryBuilder $sqlQuery
+     * @return bool|array
      */
     public function fetchAll(\Simplon\Db\SqlQueryBuilder $sqlQuery)
     {
@@ -67,13 +92,18 @@
         ->_getSqlInstance()
         ->FetchAll($sqlQuery->getQuery(), $sqlQuery->getConditions());
 
-      return $result;
+      if(! empty($result))
+      {
+        return $result;
+      }
+
+      return FALSE;
     }
 
     // ########################################
 
     /**
-     * @param \Simplon\Db\SqlQueryBuilder $sqlQuery
+     * @param SqlQueryBuilder $sqlQuery
      * @return bool|null|string
      */
     public function insert(\Simplon\Db\SqlQueryBuilder $sqlQuery)
@@ -131,7 +161,7 @@
     // ########################################
 
     /**
-     * @param \Simplon\Db\SqlQueryBuilder $sqlQuery
+     * @param SqlQueryBuilder $sqlQuery
      * @return bool|null|string
      */
     public function update(\Simplon\Db\SqlQueryBuilder $sqlQuery)
@@ -192,7 +222,7 @@
     // ########################################
 
     /**
-     * @param \Simplon\Db\SqlQueryBuilder $sqlQuery
+     * @param SqlQueryBuilder $sqlQuery
      * @return bool|null|string
      */
     public function remove(\Simplon\Db\SqlQueryBuilder $sqlQuery)
