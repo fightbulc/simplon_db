@@ -117,7 +117,7 @@
      * @param array     $data
      * @param int       $expireSeconds
      */
-    public function setUnique($cacheId, $data, $expireSeconds = 1)
+    public function setUnique($cacheId, $data, $expireSeconds = 0)
     {
       $jsonData = $this->_jsonEncode($data);
 
@@ -132,7 +132,7 @@
      * @param array $data
      * @param int   $expireSeconds
      */
-    public function setMulti($data, $expireSeconds = 1)
+    public function setMulti($data, $expireSeconds = 0)
     {
       $jsonData = array();
 
@@ -153,7 +153,7 @@
      * @param int    $expireSeconds
      * @return bool
      */
-    public function keepKeyAlive($cacheId, $expireSeconds = 1)
+    public function keepKeyAlive($cacheId, $expireSeconds = 0)
     {
       return $this
         ->_getCouchbaseInstance()
@@ -180,9 +180,16 @@
      */
     public function flush()
     {
-      return $this
+      $result = $this
         ->_getCouchbaseInstance()
         ->flush();
+
+      if($result !== FALSE)
+      {
+        return TRUE;
+      }
+
+      return FALSE;
     }
 
     // ########################################
