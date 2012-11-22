@@ -19,11 +19,11 @@
     // ##########################################
 
     /**
-     * @return AbstractDAO
+     * @return static
      */
     public static function init()
     {
-      return new static;
+      return new static();
     }
 
     // ##########################################
@@ -41,7 +41,7 @@
 
     /**
      * @param array $rawData
-     * @return AbstractDAO
+     * @return static
      */
     public function setData(array $rawData)
     {
@@ -65,7 +65,7 @@
     /**
      * @param $key
      * @param $value
-     * @return AbstractDAO
+     * @return AbstractDAO|static
      */
     protected function _setByKey($key, $value)
     {

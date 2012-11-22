@@ -25,16 +25,6 @@
     // ##########################################
 
     /**
-     * @return SqlQueryBuilder
-     */
-    public static function init()
-    {
-      return new SqlQueryBuilder();
-    }
-
-    // ##########################################
-
-    /**
      * @param $conditions array
      * @return SqlQueryBuilder
      */
@@ -129,9 +119,9 @@
     {
       foreach($this->conditions as $key => $val)
       {
-        if(strpos($this->preparedQuery, '{{' . $key . '}}') !== FALSE)
+        if(strpos($this->preparedQuery, '_' . $key . '_') !== FALSE)
         {
-          $this->preparedQuery = str_replace('{{' . $key . '}}', $val, $this->preparedQuery);
+          $this->preparedQuery = str_replace('_' . $key . '_', $val, $this->preparedQuery);
           $this->removeCondition($key);
         }
       }

@@ -2,6 +2,9 @@
 
   namespace Simplon\Db\Abstracts\DAO;
 
+  use Simplon\Db\SqlQueryBuilder;
+  use Simplon\Db\SqlManager;
+
   class AbstractSqlDAO extends AbstractDAO
   {
     /** @var \Simplon\Db\SqlManager */
@@ -18,7 +21,7 @@
     /**
      * @param \Simplon\Db\SqlManager $sqlManagerInstance
      */
-    public function __construct(\Simplon\Db\SqlManager $sqlManagerInstance)
+    public function __construct(SqlManager $sqlManagerInstance)
     {
       $this->_sqlManagerInstance = $sqlManagerInstance;
 
@@ -246,10 +249,10 @@
 
     /**
      * @param $fieldValue
-     * @param $fieldTypeName
-     * @return AbstractDAO|AbstractSqlDAO
+     * @param string $fieldTypeName
+     * @return bool|AbstractSqlDAO
      */
-    protected function fetch($fieldValue, $fieldTypeName = 'i:id')
+    public function fetch($fieldValue, $fieldTypeName = 'i:id')
     {
       if($this->_hasTableReferenceName() === FALSE)
       {
@@ -264,7 +267,7 @@
       $conditions = array('fieldValue' => $fieldValue);
 
       // build query
-      $sqlQuery = \Simplon\Db\SqlQueryBuilder::init()
+      $sqlQuery = (new SqlQueryBuilder())
         ->setQuery($parsedSqlQuery)
         ->setConditions($conditions);
 
@@ -319,7 +322,7 @@
       $preparedData = $this->_getPreparedCreateUpdateData();
 
       // build query
-      $sqlQuery = \Simplon\Db\SqlQueryBuilder::init()
+      $sqlQuery = (new SqlQueryBuilder())
         ->setTableName($this->_getTableReferenceName())
         ->setData($preparedData);
 
@@ -377,7 +380,7 @@
       $conditions = array($this->_getIdReferenceName() => $this->_getIdReferenceValue());
 
       // build query
-      $sqlQuery = \Simplon\Db\SqlQueryBuilder::init()
+      $sqlQuery = (new SqlQueryBuilder())
         ->setTableName($this->_getTableReferenceName())
         ->setConditions($conditions)
         ->setData($preparedData);
@@ -417,7 +420,7 @@
       $conditions = array($this->_getIdReferenceName() => $this->_getIdReferenceValue());
 
       // build query
-      $sqlQuery = \Simplon\Db\SqlQueryBuilder::init()
+      $sqlQuery = (new SqlQueryBuilder())
         ->setTableName($this->_getTableReferenceName())
         ->setConditions($conditions);
 

@@ -2,6 +2,8 @@
 
   namespace Simplon\Db;
 
+  use Simplon\Db\Library\Mysql;
+
   class SqlManager
   {
     /** @var \Simplon\Db\Library\Mysql */
@@ -12,7 +14,7 @@
     /**
      * @param Library\Mysql $mysqlInstance
      */
-    public function __construct(\Simplon\Db\Library\Mysql $mysqlInstance)
+    public function __construct(Mysql $mysqlInstance)
     {
       $this->_mysqlInstance = $mysqlInstance;
     }
@@ -33,7 +35,7 @@
      * @param SqlQueryBuilder $sqlQuery
      * @return \QueryResultIterator|\QueryResultIteratorClass
      */
-    public function fetchCursor(\Simplon\Db\SqlQueryBuilder $sqlQuery)
+    public function fetchCursor(SqlQueryBuilder $sqlQuery)
     {
       return $this
         ->_getSqlInstance()
@@ -46,7 +48,7 @@
      * @param SqlQueryBuilder $sqlQuery
      * @return bool|mixed
      */
-    public function fetchColumn(\Simplon\Db\SqlQueryBuilder $sqlQuery)
+    public function fetchColumn(SqlQueryBuilder $sqlQuery)
     {
       $result = $this
         ->_getSqlInstance()
@@ -66,7 +68,7 @@
      * @param SqlQueryBuilder $sqlQuery
      * @return bool|array
      */
-    public function fetchRow(\Simplon\Db\SqlQueryBuilder $sqlQuery)
+    public function fetchRow(SqlQueryBuilder $sqlQuery)
     {
       $result = $this
         ->_getSqlInstance()
@@ -86,7 +88,7 @@
      * @param SqlQueryBuilder $sqlQuery
      * @return bool|array
      */
-    public function fetchAll(\Simplon\Db\SqlQueryBuilder $sqlQuery)
+    public function fetchAll(SqlQueryBuilder $sqlQuery)
     {
       $result = $this
         ->_getSqlInstance()
@@ -106,7 +108,7 @@
      * @param SqlQueryBuilder $sqlQuery
      * @return bool|null|string
      */
-    public function insert(\Simplon\Db\SqlQueryBuilder $sqlQuery)
+    public function insert(SqlQueryBuilder $sqlQuery)
     {
       $tableName = $sqlQuery->getTableName();
       $data = $sqlQuery->getData();
@@ -164,7 +166,7 @@
      * @param SqlQueryBuilder $sqlQuery
      * @return bool|null|string
      */
-    public function update(\Simplon\Db\SqlQueryBuilder $sqlQuery)
+    public function update(SqlQueryBuilder $sqlQuery)
     {
       $tableName = $sqlQuery->getTableName();
       $newData = $sqlQuery->getData();
@@ -225,7 +227,7 @@
      * @param SqlQueryBuilder $sqlQuery
      * @return bool|null|string
      */
-    public function remove(\Simplon\Db\SqlQueryBuilder $sqlQuery)
+    public function remove(SqlQueryBuilder $sqlQuery)
     {
       $tableName = $sqlQuery->getTableName();
       $deleteConditions = $sqlQuery->getConditions();

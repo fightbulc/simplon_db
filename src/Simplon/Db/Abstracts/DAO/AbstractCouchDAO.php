@@ -2,6 +2,9 @@
 
   namespace Simplon\Db\Abstracts\DAO;
 
+  use Simplon\Db\CouchQueryBuilder;
+  use Simplon\Db\CouchbaseManager;
+
   class AbstractCouchDAO extends AbstractDAO
   {
     /** @var \Simplon\Db\CouchbaseManager */
@@ -21,7 +24,7 @@
     /**
      * @param \Simplon\Db\CouchbaseManager $couchManagerInstance
      */
-    public function __construct(\Simplon\Db\CouchbaseManager $couchManagerInstance)
+    public function __construct(CouchbaseManager $couchManagerInstance)
     {
       $this->_couchManagerInstance = $couchManagerInstance;
 
@@ -43,11 +46,11 @@
 
     /**
      * @param $message
-     * @return \Exception
+     * @throws \Exception
      */
     protected function _throwException($message)
     {
-      return parent::_throwException(__CLASS__ . ': ' . $message);
+      parent::_throwException(__CLASS__ . ': ' . $message);
     }
 
     // ##########################################
@@ -80,7 +83,7 @@
 
     /**
      * @param $artistId
-     * @return AbstractCouchDAO
+     * @return AbstractCouchDAO|static
      */
     public function setCouchId($artistId)
     {
@@ -158,7 +161,7 @@
 
     /**
      * @param $couchId
-     * @return bool|AbstractCouchDAO|AbstractDAO
+     * @return bool|static
      */
     public function fetch($couchId)
     {
@@ -166,7 +169,7 @@
       $this->setCouchId($couchId);
 
       // build couch query
-      $couchQuery = \Simplon\Db\CouchQueryBuilder::init()
+      $couchQuery = (new CouchQueryBuilder)
         ->setId($this->getCouchId())
         ->setIdTemplate($this->getCouchIdTemplate());
 
@@ -225,7 +228,7 @@
       }
 
       // build couch query
-      $couchQuery = \Simplon\Db\CouchQueryBuilder::init()
+      $couchQuery = (new CouchQueryBuilder)
         ->setId($couchId)
         ->setIdTemplate($this->getCouchIdTemplate())
         ->setExpirationInSeconds($this->_getExpiresTime())
@@ -262,7 +265,7 @@
       }
 
       // build couch query
-      $couchQuery = \Simplon\Db\CouchQueryBuilder::init()
+      $couchQuery = (new CouchQueryBuilder)
         ->setId($couchId)
         ->setIdTemplate($this->getCouchIdTemplate());
 
