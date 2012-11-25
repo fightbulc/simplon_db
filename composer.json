@@ -1,29 +1,33 @@
 {
-    "name": "simplon/db",
-    "description": "Simplon DB Libraries",
-    "homepage": "https://github.com/fightbulc/simplon_db",
-    "version": "0.5.2",
-    "type": "library",
-    "keywords": ["db", "pdo", "mysql", "memcached", "couchbase"],
-    "license": "MIT",
-    "authors": [
-        {
-            "name": "Tino Ehrich",
-            "email": "opensource@efides.com",
-            "role": "developer"
-        }
-    ],
-
-    "minimum-stability": "dev",
-
-    "require": {
-        "php": ">=5.3.3",
-        "fightbulc/easy_pdo": "dev-master"
-    },
-
-    "autoload": {
-        "psr-0": {
-            "Simplon\\Db\\": "src/"
-        }
+  "name": "simplon/db",
+  "description": "Simplon DB Libraries",
+  "homepage": "https://github.com/fightbulc/simplon_db",
+  "version": "0.5.2",
+  "type": "library",
+  "keywords": ["db", "pdo", "mysql", "memcached", "couchbase", "redis"],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Tino Ehrich",
+      "email": "opensource@efides.com",
+      "role": "developer"
     }
+  ],
+
+  "minimum-stability": "dev",
+
+  "require": {
+    "php": ">=5.4.8",
+    "fightbulc/easy_pdo": "dev-master"
+  },
+
+  "suggest": {
+    "ext-phpiredis": "*"
+  },
+
+  "autoload": {
+    "psr-0": {
+      "Simplon\\Db\\": "src/"
+    }
+  }
 }

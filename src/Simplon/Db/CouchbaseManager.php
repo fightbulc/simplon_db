@@ -2,9 +2,11 @@
 
   namespace Simplon\Db;
 
+  use Simplon\Db\Library\Couchbase;
+
   class CouchbaseManager
   {
-    /** @var \Simplon\Db\Library\Couchbase */
+    /** @var Couchbase */
     protected $_couchbaseInstance;
 
     // ########################################
@@ -12,7 +14,7 @@
     /**
      * @param Library\Couchbase $instance
      */
-    public function __construct(\Simplon\Db\Library\Couchbase $instance)
+    public function __construct(Couchbase $instance)
     {
       $this->_couchbaseInstance = $instance;
     }

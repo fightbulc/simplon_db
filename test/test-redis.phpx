@@ -1,0 +1,80 @@
+<?php
+
+  require __DIR__ . '/../vendor/autoload.php';
+
+  echo '<h1>Redis</h1>';
+
+  $redis = \Simplon\Db\DbInstance::Redis('localhost', 0);
+  $redisManager = new \Simplon\Db\RedisManager($redis);
+
+  // ############################################
+
+  // set/fetch
+  echo 'SET/GET:<br>';
+  $data = [
+    'user'  => 'tino ehrich',
+    'user2' => 'hans Meier'
+  ];
+
+  $response = $redisManager
+    ->getInstance()
+    ->stringSetMulti($data, 5)
+    ->stringGetMulti(['user', 'user2']);
+
+  var_dump($response);
+  echo '<hr>';
+
+  // get multi
+  echo 'GET MULTI:<br>';
+
+  var_dump($redisManager
+    ->getInstance()
+    ->stringGetMulti(['user', 'user2']));
+
+  echo '<hr>';
+
+  // ############################################
+
+  // hash
+  echo 'SET HASH:<br>';
+  $data = [
+    'name'  => 'tino ehrich',
+    'age'   => 31,
+    'email' => 'ehrich@efides.com',
+    'city'  => 'berlin',
+  ];
+  $redisManager
+    ->getInstance()
+    ->hashSetFieldsMulti('hashuser', $data);
+
+  echo '<hr>';
+
+  echo 'GET HASH:<br>';
+  var_dump($redisManager
+    ->getInstance()
+    ->hashGetAllFields('hashuser'));
+  echo '<hr>';
+
+  // ############################################
+
+  // list
+  echo 'SET LIST:<br>';
+  $data = ['wine', 'cheese', 'women', 'candles'];
+  $redisManager
+    ->getInstance()
+    ->listPushMulti('listUser', $data);
+
+  echo '<hr>';
+
+  echo 'GET LIST:<br>';
+  var_dump($redisManager
+    ->getInstance()
+    ->listGetAllValues('listUser'));
+
+  echo 'DEL LIST:<br>';
+  var_dump($redisManager
+    ->getInstance()
+    ->listDelete('listUser'));
+  echo '<hr>';
+
+// ############################################

@@ -6,7 +6,7 @@
 
   class SqlManager
   {
-    /** @var \Simplon\Db\Library\Mysql */
+    /** @var Mysql */
     protected $_mysqlInstance;
 
     // ########################################

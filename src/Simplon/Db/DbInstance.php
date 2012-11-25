@@ -2,11 +2,17 @@
 
   namespace Simplon\Db;
 
+  use Simplon\Db\Library\Mysql;
+  use Simplon\Db\Library\Redis;
+  use Simplon\Db\Library\Couchbase;
+  use Simplon\Db\Library\Memcached;
+
   class DbInstance
   {
     /** Instance pools */
 
     private static $_mysqlPool = array();
+    private static $_redisPool = array();
     private static $_couchbasePool = array();
     private static $_memcachedPool = array();
 
@@ -17,7 +23,7 @@
      * @param $database
      * @param $username
      * @param $password
-     * @return \Simplon\Db\Library\Mysql
+     * @return Mysql
      */
     public static function MySQL($server, $database, $username, $password)
     {
@@ -25,10 +31,31 @@
 
       if(! isset(DbInstance::$_mysqlPool[$poolId]))
       {
-        DbInstance::$_mysqlPool[$poolId] = \Simplon\Db\Library\Mysql::Instance($server, $database, $username, $password);
+        DbInstance::$_mysqlPool[$poolId] = Mysql::Instance($server, $database, $username, $password);
       }
 
       return DbInstance::$_mysqlPool[$poolId];
+    }
+
+    // ########################################
+
+    /**
+     * @param $server
+     * @param $database
+     * @param int $port
+     * @param null $password
+     * @return Redis
+     */
+    public static function Redis($server, $database, $port = 6379, $password = NULL)
+    {
+      $poolId = $server . ':' . $port . ':' . $database;
+
+      if(! isset(DbInstance::$_mysqlPool[$poolId]))
+      {
+        DbInstance::$_redisPool[$poolId] = new Redis($server, $database, $port, $password);
+      }
+
+      return DbInstance::$_redisPool[$poolId];
     }
 
     // ########################################
@@ -39,7 +66,7 @@
      * @param $username
      * @param $password
      * @param $bucket
-     * @return \Simplon\Db\Library\Couchbase
+     * @return Couchbase
      */
     public static function Couchbase($server, $port, $username, $password, $bucket)
     {
@@ -47,7 +74,7 @@
 
       if(! isset(DbInstance::$_couchbasePool[$poolId]))
       {
-        DbInstance::$_couchbasePool[$poolId] = new \Simplon\Db\Library\Couchbase($server, $port, $username, $password, $bucket);
+        DbInstance::$_couchbasePool[$poolId] = new Couchbase($server, $port, $username, $password, $bucket);
       }
 
       return DbInstance::$_couchbasePool[$poolId];
@@ -61,7 +88,7 @@
      * @param $username
      * @param $password
      * @param $bucket
-     * @return \Simplon\Db\Library\Memcached
+     * @return Memcached
      */
     public static function Memcached($server, $port, $username, $password, $bucket)
     {
@@ -69,7 +96,7 @@
 
       if(! isset(DbInstance::$_memcachedPool[$poolId]))
       {
-        DbInstance::$_memcachedPool[$poolId] = new \Simplon\Db\Library\Memcached($server, $port, $username, $password, $bucket);
+        DbInstance::$_memcachedPool[$poolId] = new Memcached($server, $port, $username, $password, $bucket);
       }
 
       return DbInstance::$_memcachedPool[$poolId];
