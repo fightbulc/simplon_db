@@ -250,7 +250,7 @@
     /**
      * @param $fieldValue
      * @param string $fieldTypeName
-     * @return bool|AbstractSqlDAO
+     * @return bool|static
      */
     public function fetch($fieldValue, $fieldTypeName = 'i:id')
     {
@@ -309,7 +309,7 @@
     // ##########################################
 
     /**
-     * @return bool|AbstractSqlDAO
+     * @return bool|static
      */
     public function create()
     {
@@ -361,7 +361,7 @@
     // ##########################################
 
     /**
-     * @return bool|AbstractSqlDAO
+     * @return bool|static
      */
     public function update()
     {

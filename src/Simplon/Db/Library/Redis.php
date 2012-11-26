@@ -125,11 +125,8 @@
       {
         $response = phpiredis_command_bs($this->_getRedisInstance(), $commandArgs);
 
-        // queue responses
-        if($this->_isEnabledPipeline())
-        {
-          $this->_addResponseQueue($response);
-        }
+        // cache response
+        $this->_addResponseQueue($response);
       }
 
       // return all pipe responses
@@ -139,6 +136,12 @@
         $this->pipelineEnable(FALSE);
 
         return $this->_getResponseQueue();
+      }
+
+      // false if empty
+      if(empty($response))
+      {
+        return FALSE;
       }
 
       return $response;
@@ -726,7 +729,12 @@
      */
     private function _getStringSetQuery($key, $value, $expire = -1)
     {
-      return array('SETEX', $key, (string)$expire, $value);
+      if($expire > 0)
+      {
+        return array('SETEX', $key, (string)$expire, $value);
+      }
+
+      return array('SET', $key, $value);
     }
 
     // ##########################################
@@ -1250,7 +1258,7 @@
      * @param $hashKey
      * @return array
      */
-    private function _getHashAllFieldsQuery($hashKey)
+    private function _getHashDataQuery($hashKey)
     {
       return array_merge(['HGETALL', $hashKey]);
     }
@@ -1261,9 +1269,9 @@
      * @param $hashKey
      * @return array|mixed|Redis
      */
-    public function hashGetAllFields($hashKey)
+    public function hashGetData($hashKey)
     {
-      $response = $this->_query($this->_getHashAllFieldsQuery($hashKey));
+      $response = $this->_query($this->_getHashDataQuery($hashKey));
 
       if($response)
       {
@@ -1281,6 +1289,24 @@
       }
 
       return FALSE;
+    }
+
+    // ##########################################
+
+    /**
+     * @param array $hashKeys
+     * @return array|bool
+     */
+    public function hashGetDataMulti(array $hashKeys)
+    {
+      $this->pipelineEnable(TRUE);
+
+      foreach($hashKeys as $hashKey)
+      {
+        $this->_query($this->_getHashDataQuery($hashKey));
+      }
+
+      return $this->execute();
     }
 
     // ##########################################

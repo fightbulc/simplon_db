@@ -7,7 +7,7 @@
   class RedisManager
   {
     /** @var Redis */
-    protected $_redisInstance;
+    private $_redisInstance;
 
     // ########################################
 
@@ -24,7 +24,7 @@
     /**
      * @return Library\Redis
      */
-    public function getInstance()
+    public function getRedisInstance()
     {
       return $this->_redisInstance;
     }
