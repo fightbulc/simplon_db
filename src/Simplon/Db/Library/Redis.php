@@ -1159,7 +1159,7 @@
      */
     public function hashSetField($hashKey, $fieldId, $value = 1)
     {
-      $response = $this->_query($this->_getHashSetFieldQuery($hashKey, $fieldId, $value));
+      $response = $this->_query($this->_getHashSetFieldQuery($hashKey, $fieldId, (string)$value));
 
       return $this;
     }
