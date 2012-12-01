@@ -5,16 +5,16 @@
   class Redis
   {
     /** @var Phpiredis */
-    private $_redisInstance;
+    protected $_redisInstance;
 
     /** @var bool */
-    private $_enablePipeline = FALSE;
+    protected $_enablePipeline = FALSE;
 
     /** @var array */
-    private $_pipelineQueue = array();
+    protected $_pipelineQueue = array();
 
     /** @var array */
-    private $_responseQueue = array();
+    protected $_responseQueue = array();
 
     // ##########################################
 
@@ -70,7 +70,7 @@
 
     /**
      * @param $commandArgs
-     * @return array|bool|Redis
+     * @return bool|mixed
      */
     protected function _query($commandArgs)
     {
@@ -79,72 +79,55 @@
         return FALSE;
       }
 
-      $this->_addPipelineQueue($commandArgs);
+      $response = phpiredis_command_bs($this->_getRedisInstance(), $commandArgs);
 
-      if($this->_isEnabledPipeline())
+      if(substr($response, 0, 2) != 'ERR')
       {
-        return $this;
+        return $response;
       }
 
-      return $this->execute();
+      return FALSE;
     }
 
     // ##########################################
 
     /**
-     * @param $commandArgsMulti
-     * @return array|bool
+     * @return array
      */
-    protected function _queryMulti($commandArgsMulti)
+    protected function _pipelineExecute()
     {
-      $this->pipelineEnable(TRUE);
+      $_pipeline = $this->_pipelineGetQueue();
 
-      foreach($commandArgsMulti as $commandArgs)
+      $requestResponsesMulti = [
+        'errors'    => [],
+        'responses' => [],
+      ];
+
+      // run through all commands
+      $responsesMulti = phpiredis_multi_command_bs($this->_getRedisInstance(), $_pipeline);
+
+      // build request/response array
+      foreach($responsesMulti as $index => $response)
       {
-        if($commandArgs !== FALSE)
+        $_requestKey = json_encode($_pipeline[$index]);
+
+        if(substr($response, 0, 3) == 'ERR')
         {
-          $this->_addPipelineQueue($commandArgs);
+          $requestResponsesMulti['error'][$_requestKey] = $response;
+        }
+        else
+        {
+          $requestResponsesMulti['responses'][$_requestKey] = $response;
         }
       }
 
-      return $this->execute();
-    }
+      // reset request/response queues
+      $this->_pipelineResetQueue();
 
-    // ##########################################
+      // disable pipeline
+      $this->_pipelineEnable(FALSE);
 
-    /**
-     * @return array|bool
-     */
-    public function execute()
-    {
-      $response = FALSE;
-      $_pipelineQueue = $this->_getPipelineQueue();
-
-      // run through all commands
-      while($commandArgs = array_shift($_pipelineQueue))
-      {
-        $response = phpiredis_command_bs($this->_getRedisInstance(), $commandArgs);
-
-        // cache response
-        $this->_addResponseQueue($response);
-      }
-
-      // return all pipe responses
-      if($this->_isEnabledPipeline())
-      {
-        // disable pipeline
-        $this->pipelineEnable(FALSE);
-
-        return $this->_getResponseQueue();
-      }
-
-      // false if empty
-      if(empty($response))
-      {
-        return FALSE;
-      }
-
-      return $response;
+      return $requestResponsesMulti;
     }
 
     // ##########################################
@@ -153,12 +136,9 @@
      * @param bool $use
      * @return Redis
      */
-    public function pipelineEnable($use = TRUE)
+    protected function _pipelineEnable($use = TRUE)
     {
       $this->_enablePipeline = $use === TRUE ? TRUE : FALSE;
-
-      // reset request/response queues
-      $this->_resetQueues();
 
       return $this;
     }
@@ -168,7 +148,7 @@
     /**
      * @return bool
      */
-    protected function _isEnabledPipeline()
+    protected function _pipelineIsEnabled()
     {
       return $this->_enablePipeline;
     }
@@ -178,7 +158,7 @@
     /**
      * @return array
      */
-    protected function _getPipelineQueue()
+    protected function _pipelineGetQueue()
     {
       return $this->_pipelineQueue;
     }
@@ -189,7 +169,7 @@
      * @param $cmdArgs
      * @return Redis
      */
-    protected function _addPipelineQueue($cmdArgs)
+    protected function _pipelineAddQueueItem($cmdArgs)
     {
       $this->_pipelineQueue[] = $cmdArgs;
 
@@ -199,38 +179,12 @@
     // ##########################################
 
     /**
-     * @param $response
      * @return Redis
      */
-    protected function _addResponseQueue($response)
-    {
-      $this->_responseQueue[] = $response;
-
-      return $this;
-    }
-
-    // ##########################################
-
-    /**
-     * @return array
-     */
-    protected function _getResponseQueue()
-    {
-      return $this->_responseQueue;
-    }
-
-    // ##########################################
-
-    /**
-     * @return Redis
-     */
-    protected function _resetQueues()
+    protected function _pipelineResetQueue()
     {
       // reset queue
-      $this->_pipelineQueue = array();
-
-      // reset responses
-      $this->_responseQueue = array();
+      $this->_pipelineQueue = [];
 
       return $this;
     }
@@ -241,7 +195,7 @@
      * @param $dbId
      * @return Redis
      */
-    private function _getDbSelectQuery($dbId)
+    protected function _getDbSelectQuery($dbId)
     {
       return array('SELECT', (string)$dbId);
     }
@@ -250,22 +204,27 @@
 
     /**
      * @param $dbId
-     * @return Redis
+     * @return bool|mixed
      */
     public function dbSelect($dbId)
     {
       $response = $this->_query($this->_getDbSelectQuery($dbId));
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
 
     /**
      * @param $password
-     * @return Redis
+     * @return array
      */
-    private function _getDbAuthQuery($password)
+    protected function _getDbAuthQuery($password)
     {
       return array('AUTH', $password);
     }
@@ -274,11 +233,18 @@
 
     /**
      * @param $password
-     * @return Redis
+     * @return bool|mixed
      */
     public function dbAuth($password)
     {
-      return $this->_query($this->_getDbAuthQuery($password));
+      $response = $this->_query($this->_getDbAuthQuery($password));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -286,7 +252,7 @@
     /**
      * @return array
      */
-    private function _getDbFlushQuery()
+    protected function _getDbFlushQuery()
     {
       return ['FLUSHDB'];
     }
@@ -295,16 +261,21 @@
 
     /**
      * @param bool $confirm
-     * @return Redis
+     * @return bool|mixed
      */
     public function dbFlush($confirm = FALSE)
     {
       if($confirm === TRUE)
       {
         $response = $this->_query($this->_getDbFlushQuery());
+
+        if($response != FALSE)
+        {
+          return $response;
+        }
       }
 
-      return $this;
+      return FALSE;
     }
 
     // ##########################################
@@ -313,7 +284,7 @@
      * @param array $keys
      * @return array
      */
-    private function _getKeyDeleteMultiQuery(array $keys)
+    protected function _getKeyDeleteMultiQuery(array $keys)
     {
       return array_merge(['DEL'], $keys);
     }
@@ -322,26 +293,36 @@
 
     /**
      * @param $key
-     * @return mixed
+     * @return bool|mixed
      */
     public function keyDelete($key)
     {
       $response = $this->_query($this->_getKeyDeleteMultiQuery([$key]));
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
 
     /**
-     * @param $keys
-     * @return mixed
+     * @param array $keys
+     * @return bool|mixed
      */
     public function keyDeleteMulti(array $keys)
     {
       $response = $this->_query($this->_getKeyDeleteMultiQuery($keys));
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -349,9 +330,9 @@
     /**
      * @param $key
      * @param $seconds
-     * @return string
+     * @return array|bool
      */
-    private function _getKeySetExpireQuery($key, $seconds = -1)
+    protected function _getKeySetExpireQuery($key, $seconds = -1)
     {
       if($seconds > 0)
       {
@@ -366,34 +347,15 @@
     /**
      * @param $key
      * @param $seconds
-     * @return Redis
+     * @return bool|mixed
      */
     public function keySetExpire($key, $seconds = -1)
     {
       $response = $this->_query($this->_getKeySetExpireQuery($key, $seconds));
 
-      return $this;
-    }
-
-    // ##########################################
-
-    /**
-     * @param array $keys
-     * @param $seconds
-     * @return array|bool
-     */
-    private function _getKeySetExpireMultiQuery(array $keys, $seconds = -1)
-    {
-      if($seconds > 0)
+      if($response != FALSE)
       {
-        $cmds = [];
-
-        foreach($keys as $key)
-        {
-          $cmds[] = $this->_getKeySetExpireQuery($key, $seconds);
-        }
-
-        return $cmds;
+        return $response;
       }
 
       return FALSE;
@@ -404,13 +366,28 @@
     /**
      * @param array $keys
      * @param $seconds
-     * @return Redis
+     * @return array|bool
      */
     public function keySetExpireMulti(array $keys, $seconds = -1)
     {
-      $response = $this->_queryMulti($this->_getKeySetExpireMultiQuery($keys, $seconds));
+      if($seconds > 0)
+      {
+        $this->_pipelineEnable(TRUE);
 
-      return $this;
+        foreach($keys as $key)
+        {
+          $this->_pipelineAddQueueItem($this->_getKeySetExpireQuery($key, $seconds));
+        }
+
+        $response = $this->_pipelineExecute();
+
+        if($response != FALSE)
+        {
+          return $response;
+        }
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -418,7 +395,7 @@
     /**
      * @return array
      */
-    private function _getKeysGetCount()
+    protected function _getKeysGetCount()
     {
       return ['DBSIZE'];
     }
@@ -426,11 +403,18 @@
     // ##########################################
 
     /**
-     * @return array|mixed|Redis
+     * @return bool|mixed
      */
     public function keysGetCount()
     {
-      return $this->_query($this->_getKeysGetCount());
+      $response = $this->_query($this->_getKeysGetCount());
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -439,7 +423,7 @@
      * @param $pattern
      * @return array
      */
-    private function _getKeysGetByPatternQuery($pattern)
+    protected function _getKeysGetByPatternQuery($pattern)
     {
       return ['KEYS', $pattern];
     }
@@ -448,11 +432,18 @@
 
     /**
      * @param $pattern
-     * @return array|bool|Redis
+     * @return bool|mixed
      */
     public function keysGetByPattern($pattern)
     {
-      return $this->_query($this->_getKeysGetByPatternQuery($pattern));
+      $response = $this->_query($this->_getKeysGetByPatternQuery($pattern));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -461,7 +452,7 @@
      * @param $key
      * @return array
      */
-    private function _getKeyExistsQuery($key)
+    protected function _getKeyExistsQuery($key)
     {
       return ['EXISTS', $key];
     }
@@ -470,11 +461,18 @@
 
     /**
      * @param $key
-     * @return array|mixed|Redis
+     * @return bool|mixed
      */
     public function keyExists($key)
     {
-      return $this->_query($this->_getKeyExistsQuery($key));
+      $response = $this->_query($this->_getKeyExistsQuery($key));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -483,7 +481,7 @@
      * @param $key
      * @return array
      */
-    private function _getKeyGetExpirationQuery($key)
+    protected function _getKeyGetExpirationQuery($key)
     {
       return ['TTL', $key];
     }
@@ -492,11 +490,18 @@
 
     /**
      * @param $key
-     * @return array|mixed|Redis
+     * @return bool|mixed
      */
     public function keyGetExpiration($key)
     {
-      return $this->_query($this->_getKeyGetExpirationQuery($key));
+      $response = $this->_query($this->_getKeyGetExpirationQuery($key));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -505,7 +510,7 @@
      * @param $key
      * @return array
      */
-    private function _getKeyRenameQuery($key)
+    protected function _getKeyRenameQuery($key)
     {
       return ['RENAMENX', $key];
     }
@@ -514,11 +519,18 @@
 
     /**
      * @param $key
-     * @return array|mixed|Redis
+     * @return bool|mixed
      */
     public function keyRename($key)
     {
-      return $this->_query($this->_getKeyRenameQuery($key));
+      $response = $this->_query($this->_getKeyRenameQuery($key));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -527,7 +539,7 @@
      * @param $key
      * @return array
      */
-    private function _getKeyRemoveExpirationQuery($key)
+    protected function _getKeyRemoveExpirationQuery($key)
     {
       return ['PERSIST', $key];
     }
@@ -536,11 +548,18 @@
 
     /**
      * @param $key
-     * @return array|mixed|Redis
+     * @return bool|mixed
      */
     public function keyRemoveExpiration($key)
     {
-      return $this->_query($this->_getKeyRemoveExpirationQuery($key));
+      $response = $this->_query($this->_getKeyRemoveExpirationQuery($key));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -550,7 +569,7 @@
      * @param $value
      * @return array
      */
-    private function _getKeyIncrementByQuery($key, $value = 1)
+    protected function _getKeyIncrementByQuery($key, $value = 1)
     {
       return ['INCRBY', $key, $value];
     }
@@ -560,13 +579,18 @@
     /**
      * @param $key
      * @param int $value
-     * @return Redis
+     * @return bool|mixed
      */
     public function keyIncrementBy($key, $value = 1)
     {
       $response = $this->_query($this->_getKeyIncrementByQuery($key, $value));
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -576,7 +600,7 @@
      * @param $value
      * @return array
      */
-    private function _getKeyDecrementByQuery($key, $value = 1)
+    protected function _getKeyDecrementByQuery($key, $value = 1)
     {
       return ['DECRBY', $key, $value];
     }
@@ -585,12 +609,19 @@
 
     /**
      * @param $key
-     * @param $value
-     * @return array|mixed|Redis
+     * @param int $value
+     * @return bool|mixed
      */
     public function keyDecrementBy($key, $value = 1)
     {
-      return $this->_query($this->_getKeyDecrementByQuery($key, $value));
+      $response = $this->_query($this->_getKeyDecrementByQuery($key, $value));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -601,7 +632,7 @@
      * @param $value
      * @return array
      */
-    private function _getBitSetQuery($key, $offset, $value)
+    protected function _getBitSetQuery($key, $offset, $value)
     {
       return array('SETBIT', $key, $offset, $value);
     }
@@ -612,13 +643,18 @@
      * @param $key
      * @param $offset
      * @param $value
-     * @return Redis
+     * @return bool|mixed
      */
     public function bitSet($key, $offset, $value)
     {
       $response = $this->_query($this->_getBitSetQuery($key, $offset, $value));
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -628,7 +664,7 @@
      * @param $offset
      * @return array
      */
-    private function _getBitGetQuery($key, $offset)
+    protected function _getBitGetQuery($key, $offset)
     {
       return array('GETBIT', $key, $offset);
     }
@@ -638,11 +674,18 @@
     /**
      * @param $key
      * @param $offset
-     * @return array|bool|Redis
+     * @return bool|mixed
      */
     public function bitGet($key, $offset)
     {
-      return $this->_query($this->_getBitGetQuery($key, $offset));
+      $response = $this->_query($this->_getBitGetQuery($key, $offset));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -651,7 +694,7 @@
      * @param $key
      * @return array
      */
-    private function _getBitGetAllQuery($key)
+    protected function _getBitGetAllQuery($key)
     {
       return ['GET', $key];
     }
@@ -660,11 +703,18 @@
 
     /**
      * @param $key
-     * @return array|bool|\Simplon\Db\Library\Redis
+     * @return bool|mixed
      */
     public function bitGetAll($key)
     {
-      return $this->_query($this->_getBitGetAllQuery($key));
+      $response = $this->_query($this->_getBitGetAllQuery($key));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -675,7 +725,7 @@
      * @param $end
      * @return array
      */
-    private function _getBitCountQuery($key, $start = 0, $end = -1)
+    protected function _getBitCountQuery($key, $start = 0, $end = -1)
     {
       return array('BITCOUNT', $key, $start, $end);
     }
@@ -686,37 +736,54 @@
      * @param $key
      * @param int $start
      * @param $end
-     * @return array|bool|Redis
+     * @return bool|mixed
      */
     public function bitCount($key, $start = 0, $end = -1)
     {
-      return $this->_query($this->_getBitCountQuery($key, $start, $end));
+      $response = $this->_query($this->_getBitCountQuery($key, $start, $end));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
 
     /**
      * @param $key
-     * @return Redis
+     * @return bool|mixed
      */
     public function bitDelete($key)
     {
       $response = $this->keyDelete($key);
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
 
     /**
      * @param array $keys
-     * @return Redis
+     * @return bool|mixed
      */
     public function bitDeleteMulti(array $keys)
     {
       $response = $this->keyDeleteMulti($keys);
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -727,7 +794,7 @@
      * @param $expire
      * @return array
      */
-    private function _getStringSetQuery($key, $value, $expire = -1)
+    protected function _getStringSetQuery($key, $value, $expire = -1)
     {
       if($expire > 0)
       {
@@ -743,13 +810,18 @@
      * @param $key
      * @param $value
      * @param $expire
-     * @return Redis
+     * @return bool|mixed
      */
     public function stringSet($key, $value, $expire = -1)
     {
       $response = $this->_query($this->_getStringSetQuery($key, $value, $expire));
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -761,16 +833,21 @@
      */
     public function stringSetMulti(array $pairs, $expire = -1)
     {
-      $this->pipelineEnable(TRUE);
+      $this->_pipelineEnable(TRUE);
 
       foreach($pairs as $key => $value)
       {
-        $this->stringSet($key, $value, $expire);
+        $this->_pipelineAddQueueItem($this->_getStringSetQuery($key, $value, $expire));
       }
 
-      $response = $this->execute();
+      $response = $this->_pipelineExecute();
 
-      return $this;
+      if(empty($response['errors']))
+      {
+        return TRUE;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -779,7 +856,7 @@
      * @param $key
      * @return string
      */
-    private function _getStringGetQuery($key)
+    protected function _getStringGetQuery($key)
     {
       return array('GET', $key);
     }
@@ -788,11 +865,18 @@
 
     /**
      * @param $key
-     * @return mixed
+     * @return bool|mixed
      */
-    public function stringGet($key)
+    public function stringGetData($key)
     {
-      return $this->_query($this->_getStringGetQuery($key));
+      $response = $this->_query($this->_getStringGetQuery($key));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -801,7 +885,7 @@
      * @param array $keys
      * @return array
      */
-    private function _getStringGetMultiQuery(array $keys)
+    protected function _getStringGetMultiQuery(array $keys)
     {
       return array_merge(['MGET'], $keys);
     }
@@ -809,38 +893,55 @@
     // ##########################################
 
     /**
-     * @param $keys
-     * @return mixed
+     * @param array $keys
+     * @return bool|mixed
      */
-    public function stringGetMulti(array $keys)
+    public function stringGetDataMulti(array $keys)
     {
-      return $this->_query($this->_getStringGetMultiQuery($keys));
+      $response = $this->_query($this->_getStringGetMultiQuery($keys));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
 
     /**
      * @param $key
-     * @return Redis
+     * @return bool|mixed
      */
     public function stringDelete($key)
     {
       $response = $this->keyDelete($key);
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
 
     /**
      * @param array $keys
-     * @return Redis
+     * @return bool|mixed
      */
     public function stringDeleteMulti(array $keys)
     {
       $response = $this->keyDeleteMulti($keys);
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -850,7 +951,7 @@
      * @param $values
      * @return array
      */
-    private function _getListUnshiftMultiQuery($key, array $values)
+    protected function _getListUnshiftMultiQuery($key, array $values)
     {
       return array_merge(['LPUSH', $key], $values);
     }
@@ -860,13 +961,18 @@
     /**
      * @param $key
      * @param $value
-     * @return Redis
+     * @return bool|mixed
      */
     public function listUnshift($key, $value)
     {
       $response = $this->_query($this->_getListUnshiftMultiQuery($key, [$value]));
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -874,13 +980,18 @@
     /**
      * @param $key
      * @param array $values
-     * @return Redis
+     * @return bool|mixed
      */
     public function listUnshiftMulti($key, array $values)
     {
       $response = $this->_query($this->_getListUnshiftMultiQuery($key, $values));
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -890,7 +1001,7 @@
      * @param $values
      * @return array
      */
-    private function _getListPushMultiQuery($key, array $values)
+    protected function _getListPushMultiQuery($key, array $values)
     {
       return array_merge(['RPUSH', $key], $values);
     }
@@ -900,13 +1011,18 @@
     /**
      * @param $key
      * @param $value
-     * @return Redis
+     * @return bool|mixed
      */
     public function listPush($key, $value)
     {
       $response = $this->_query($this->_getListPushMultiQuery($key, [$value]));
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -914,13 +1030,18 @@
     /**
      * @param $key
      * @param array $values
-     * @return Redis
+     * @return bool|mixed
      */
     public function listPushMulti($key, array $values)
     {
       $response = $this->_query($this->_getListUnshiftMultiQuery($key, $values));
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -929,7 +1050,7 @@
      * @param $key
      * @return array
      */
-    private function _getListShiftQuery($key)
+    protected function _getListShiftQuery($key)
     {
       return ['LPOP', $key];
     }
@@ -938,11 +1059,18 @@
 
     /**
      * @param $key
-     * @return array|bool|Redis
+     * @return bool|mixed
      */
     public function listShift($key)
     {
-      return $this->_query($this->_getListShiftQuery($key));
+      $response = $this->_query($this->_getListShiftQuery($key));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -951,7 +1079,7 @@
      * @param $key
      * @return array
      */
-    private function _getListPopQuery($key)
+    protected function _getListPopQuery($key)
     {
       return ['RPOP', $key];
     }
@@ -960,11 +1088,18 @@
 
     /**
      * @param $key
-     * @return array|bool|Redis
+     * @return bool|mixed
      */
     public function listPop($key)
     {
-      return $this->_query($this->_getListPopQuery($key));
+      $response = $this->_query($this->_getListPopQuery($key));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -975,7 +1110,7 @@
      * @param $end
      * @return array
      */
-    private function _getListGetValuesByRangeQuery($key, $start, $end)
+    protected function _getListGetValuesByRangeQuery($key, $start, $end)
     {
       return ['LRANGE', $key, (string)$start, (string)$end];
     }
@@ -986,22 +1121,61 @@
      * @param $key
      * @param $start
      * @param $end
-     * @return array|bool|Redis
+     * @return bool|mixed
      */
     public function listGetValuesByRange($key, $start, $end)
     {
-      return $this->_query($this->_getListGetValuesByRangeQuery($key, $start, $end));
+      $response = $this->_query($this->_getListGetValuesByRangeQuery($key, $start, $end));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
 
     /**
      * @param $key
-     * @return array|bool|Redis
+     * @return bool|mixed
      */
-    public function listGetAllValues($key)
+    public function listGetData($key)
     {
-      return $this->_query($this->_getListGetValuesByRangeQuery($key, 0, - 1));
+      $response = $this->_query($this->_getListGetValuesByRangeQuery($key, 0, - 1));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
+    }
+
+    // ##########################################
+
+    /**
+     * @param array $keys
+     * @return array|bool
+     */
+    public function listGetDataMulti(array $keys)
+    {
+      $this->_pipelineEnable(TRUE);
+
+      foreach($keys as $key)
+      {
+        $this->_pipelineAddQueueItem($this->_getListGetValuesByRangeQuery($key, 0, - 1));
+      }
+
+      $response = $this->_pipelineExecute();
+
+      if(empty($response['errors']))
+      {
+        return TRUE;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1010,7 +1184,7 @@
      * @param $key
      * @return array
      */
-    private function _getListGetCountQuery($key)
+    protected function _getListGetCountQuery($key)
     {
       return ['LLEN', $key];
     }
@@ -1019,11 +1193,18 @@
 
     /**
      * @param $key
-     * @return array|bool|Redis
+     * @return bool|mixed
      */
     public function listGetCount($key)
     {
-      return $this->_query($this->_getListGetCountQuery($key));
+      $response = $this->_query($this->_getListGetCountQuery($key));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1034,7 +1215,7 @@
      * @param $value
      * @return array
      */
-    private function _getListSetAtIndexQuery($key, $index, $value)
+    protected function _getListSetAtIndexQuery($key, $index, $value)
     {
       return ['LSET', $key, $index, $value];
     }
@@ -1045,13 +1226,18 @@
      * @param $key
      * @param $index
      * @param $value
-     * @return Redis
+     * @return bool|mixed
      */
     public function listSetAtIndex($key, $index, $value)
     {
       $response = $this->_query($this->_getListSetAtIndexQuery($key, $index, $value));
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1062,7 +1248,7 @@
      * @param $value
      * @return array
      */
-    private function _getListGetFromIndexQuery($key, $index, $value)
+    protected function _getListGetFromIndexQuery($key, $index, $value)
     {
       return ['LINDEX', $key, $index, $value];
     }
@@ -1073,13 +1259,18 @@
      * @param $key
      * @param $index
      * @param $value
-     * @return Redis
+     * @return bool|mixed
      */
     public function listGetFromIndex($key, $index, $value)
     {
       $response = $this->_query($this->_getListGetFromIndexQuery($key, $index, $value));
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1090,7 +1281,7 @@
      * @param $value
      * @return array
      */
-    private function _getListTrimQuery($key, $index, $value)
+    protected function _getListTrimQuery($key, $index, $value)
     {
       return ['LTRIM', $key, $index, $value];
     }
@@ -1101,39 +1292,54 @@
      * @param $key
      * @param $index
      * @param $value
-     * @return Redis
+     * @return bool|mixed
      */
     public function listTrim($key, $index, $value)
     {
       $response = $this->_query($this->_getListTrimQuery($key, $index, $value));
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
 
     /**
      * @param $key
-     * @return Redis
+     * @return bool|mixed
      */
     public function listDelete($key)
     {
       $response = $this->keyDelete($key);
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
 
     /**
      * @param array $keys
-     * @return Redis
+     * @return bool|mixed
      */
     public function listDeleteMulti(array $keys)
     {
       $response = $this->keyDeleteMulti($keys);
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1144,7 +1350,7 @@
      * @param $value
      * @return array
      */
-    private function _getHashSetFieldQuery($hashKey, $fieldId, $value)
+    protected function _getHashSetFieldQuery($hashKey, $fieldId, $value)
     {
       return ['HSET', $hashKey, $fieldId, $value];
     }
@@ -1155,13 +1361,18 @@
      * @param $hashKey
      * @param $fieldId
      * @param int $value
-     * @return Redis
+     * @return bool|mixed
      */
     public function hashSetField($hashKey, $fieldId, $value = 1)
     {
       $response = $this->_query($this->_getHashSetFieldQuery($hashKey, $fieldId, (string)$value));
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1171,7 +1382,7 @@
      * @param $pairs
      * @return array
      */
-    private function _getHashSetFieldsMultiQuery($hashKey, $pairs)
+    protected function _getHashSetFieldsMultiQuery($hashKey, $pairs)
     {
       $flat = [];
 
@@ -1190,18 +1401,23 @@
      * @param $hashKey
      * @param $pairs
      * @param $expire
-     * @return Redis
+     * @return array|bool
      */
     public function hashSetFieldsMulti($hashKey, $pairs, $expire = -1)
     {
-      $cmds = [
-        $this->_getHashSetFieldsMultiQuery($hashKey, $pairs),
-        $this->_getKeySetExpireQuery($hashKey, $expire),
-      ];
+      $this->_pipelineEnable(TRUE);
 
-      $response = $this->_queryMulti($cmds);
+      $this->_pipelineAddQueueItem($this->_getHashSetFieldsMultiQuery($hashKey, $pairs));
+      $this->_pipelineAddQueueItem($this->_getKeySetExpireQuery($hashKey, $expire));
 
-      return $this;
+      $response = $this->_pipelineExecute();
+
+      if(empty($response['errors']))
+      {
+        return TRUE;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1211,7 +1427,7 @@
      * @param $fieldId
      * @return array
      */
-    private function _getHashGetFieldQuery($hashKey, $fieldId)
+    protected function _getHashGetFieldQuery($hashKey, $fieldId)
     {
       return ['HGET', $hashKey, $fieldId];
     }
@@ -1221,11 +1437,18 @@
     /**
      * @param $hashKey
      * @param $fieldId
-     * @return array|bool|Redis
+     * @return bool|mixed
      */
     public function hashGetField($hashKey, $fieldId)
     {
-      return $this->_query($this->_getHashGetFieldQuery($hashKey, $fieldId));
+      $response = $this->_query($this->_getHashGetFieldQuery($hashKey, $fieldId));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1235,7 +1458,7 @@
      * @param $fieldIds
      * @return array
      */
-    private function _getHashGetFieldsMultiQuery($hashKey, $fieldIds)
+    protected function _getHashGetFieldsMultiQuery($hashKey, $fieldIds)
     {
       return array_merge(['HMGET', $hashKey], $fieldIds);
     }
@@ -1245,11 +1468,18 @@
     /**
      * @param $hashKey
      * @param $fieldIds
-     * @return array|mixed|Redis
+     * @return bool|mixed
      */
     public function hashGetFieldsMulti($hashKey, $fieldIds)
     {
-      return $this->_query($this->_getHashGetFieldsMultiQuery($hashKey, $fieldIds));
+      $response = $this->_query($this->_getHashGetFieldsMultiQuery($hashKey, $fieldIds));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1258,7 +1488,7 @@
      * @param $hashKey
      * @return array
      */
-    private function _getHashDataQuery($hashKey)
+    protected function _getHashDataQuery($hashKey)
     {
       return array_merge(['HGETALL', $hashKey]);
     }
@@ -1267,16 +1497,20 @@
 
     /**
      * @param $hashKey
-     * @return array|mixed|Redis
+     * @return array|bool
      */
     public function hashGetData($hashKey)
     {
       $response = $this->_query($this->_getHashDataQuery($hashKey));
 
-      if($response)
+      if($response != FALSE)
       {
         $hash = [];
         $responseLength = count($response);
+
+        var_dump('==========');
+        var_dump($response);
+        var_dump('==========');
 
         for($i = 0; $i < $responseLength; $i += 2)
         {
@@ -1299,14 +1533,21 @@
      */
     public function hashGetDataMulti(array $hashKeys)
     {
-      $this->pipelineEnable(TRUE);
+      $this->_pipelineEnable(TRUE);
 
       foreach($hashKeys as $hashKey)
       {
-        $this->_query($this->_getHashDataQuery($hashKey));
+        $this->_pipelineAddQueueItem($this->_getHashDataQuery($hashKey));
       }
 
-      return $this->execute();
+      $response = $this->_pipelineExecute();
+
+      if(empty($response['errors']))
+      {
+        return TRUE;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1316,7 +1557,7 @@
      * @param $fieldId
      * @return array
      */
-    private function _getHashFieldExistsQuery($hashKey, $fieldId)
+    protected function _getHashFieldExistsQuery($hashKey, $fieldId)
     {
       return ['HEXISTS', $hashKey, $fieldId];
     }
@@ -1326,11 +1567,18 @@
     /**
      * @param $hashKey
      * @param $fieldId
-     * @return array|mixed|Redis
+     * @return bool|mixed
      */
     public function hashFieldExists($hashKey, $fieldId)
     {
-      return $this->_query($this->_getHashFieldExistsQuery($hashKey, $fieldId));
+      $response = $this->_query($this->_getHashFieldExistsQuery($hashKey, $fieldId));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1340,7 +1588,7 @@
      * @param $fieldIds
      * @return array
      */
-    private function _getHashDeleteFieldMultiQuery($hashKey, array $fieldIds)
+    protected function _getHashDeleteFieldMultiQuery($hashKey, array $fieldIds)
     {
       return array_merge(['HDEL', $hashKey], $fieldIds);
     }
@@ -1350,23 +1598,37 @@
     /**
      * @param $hashKey
      * @param $fieldId
-     * @return array|mixed|Redis
+     * @return bool|mixed
      */
     public function hashDeleteField($hashKey, $fieldId)
     {
-      return $this->hashDeleteFieldMulti($hashKey, [$fieldId]);
+      $response = $this->hashDeleteFieldMulti($hashKey, [$fieldId]);
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
 
     /**
      * @param $hashKey
-     * @param $fieldIds
-     * @return array|mixed|Redis
+     * @param array $fieldIds
+     * @return bool|mixed
      */
     public function hashDeleteFieldMulti($hashKey, array $fieldIds)
     {
-      return $this->_query($this->_getHashDeleteFieldMultiQuery($hashKey, $fieldIds));
+      $response = $this->_query($this->_getHashDeleteFieldMultiQuery($hashKey, $fieldIds));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1375,7 +1637,7 @@
      * @param $hashKey
      * @return array
      */
-    private function _getHashGetKeysQuery($hashKey)
+    protected function _getHashGetKeysQuery($hashKey)
     {
       return ['HKEYS', $hashKey];
     }
@@ -1384,11 +1646,18 @@
 
     /**
      * @param $hashKey
-     * @return array|bool|Redis
+     * @return bool|mixed
      */
     public function hashGetKeys($hashKey)
     {
-      return $this->_query($this->_getHashGetKeysQuery($hashKey));
+      $response = $this->_query($this->_getHashGetKeysQuery($hashKey));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1397,7 +1666,7 @@
      * @param $hashKey
      * @return array
      */
-    private function _getHashGetValuesQuery($hashKey)
+    protected function _getHashGetValuesQuery($hashKey)
     {
       return ['HVALS', $hashKey];
     }
@@ -1406,11 +1675,18 @@
 
     /**
      * @param $hashKey
-     * @return array|bool|Redis
+     * @return bool|mixed
      */
     public function hashGetValues($hashKey)
     {
-      return $this->_query($this->_getHashGetValuesQuery($hashKey));
+      $response = $this->_query($this->_getHashGetValuesQuery($hashKey));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1419,7 +1695,7 @@
      * @param $hashKey
      * @return array
      */
-    private function _getHashGetFieldsCountQuery($hashKey)
+    protected function _getHashGetFieldsCountQuery($hashKey)
     {
       return ['HLEN', $hashKey];
     }
@@ -1428,11 +1704,18 @@
 
     /**
      * @param $hashKey
-     * @return array|bool|Redis
+     * @return bool|mixed
      */
     public function hashGetFieldsCount($hashKey)
     {
-      return $this->_query($this->_getHashGetFieldsCountQuery($hashKey));
+      $response = $this->_query($this->_getHashGetFieldsCountQuery($hashKey));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1442,7 +1725,7 @@
      * @param $value
      * @return array
      */
-    private function _getHashIncrementByQuery($hashKey, $value)
+    protected function _getHashIncrementByQuery($hashKey, $value)
     {
       return ['HINCRBY', $hashKey, $value];
     }
@@ -1452,13 +1735,18 @@
     /**
      * @param $hashKey
      * @param $value
-     * @return Redis
+     * @return bool|mixed
      */
     public function hashIncrementBy($hashKey, $value)
     {
       $response = $this->_query($this->_getHashIncrementByQuery($hashKey, $value));
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1468,7 +1756,7 @@
      * @param $value
      * @return array
      */
-    private function _getHashDecrementByQuery($hashKey, $value)
+    protected function _getHashDecrementByQuery($hashKey, $value)
     {
       if($value > 0)
       {
@@ -1483,39 +1771,54 @@
     /**
      * @param $hashKey
      * @param $value
-     * @return Redis
+     * @return bool|mixed
      */
     public function hashDecrementBy($hashKey, $value)
     {
       $response = $this->_query($this->_getHashDecrementByQuery($hashKey, $value));
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
 
     /**
      * @param $key
-     * @return Redis
+     * @return bool|mixed
      */
     public function hashDelete($key)
     {
       $response = $this->keyDelete($key);
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
 
     /**
      * @param array $keys
-     * @return Redis
+     * @return bool|mixed
      */
     public function hashDeleteMulti(array $keys)
     {
       $response = $this->keyDeleteMulti($keys);
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1525,7 +1828,7 @@
      * @param array $values
      * @return array
      */
-    private function _getSetAddMultiQuery($key, array $values)
+    protected function _getSetAddMultiQuery($key, array $values)
     {
       return array_merge(['SADD', $key], $values);
     }
@@ -1535,27 +1838,37 @@
     /**
      * @param $key
      * @param $value
-     * @return Redis
+     * @return bool|mixed
      */
     public function setAdd($key, $value)
     {
       $response = $this->_query($this->_getSetAddMultiQuery($key, [$value]));
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
 
     /**
      * @param $key
-     * @param $values
-     * @return Redis
+     * @param array $values
+     * @return bool|mixed
      */
     public function setAddMulti($key, array $values)
     {
       $response = $this->_query($this->_getSetAddMultiQuery($key, $values));
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1564,7 +1877,7 @@
      * @param $key
      * @return array
      */
-    private function _getSetGetCountQuery($key)
+    protected function _getSetGetCountQuery($key)
     {
       return ['SCARD', $key];
     }
@@ -1573,11 +1886,18 @@
 
     /**
      * @param $key
-     * @return array|bool|Redis
+     * @return bool|mixed
      */
     public function setGetCount($key)
     {
-      return $this->_query($this->_getSetGetCountQuery($key));
+      $response = $this->_query($this->_getSetGetCountQuery($key));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1587,7 +1907,7 @@
      * @param array $setKeyN
      * @return array
      */
-    private function _getSetGetDifferenceMultiQuery($setKeyA, array $setKeyN)
+    protected function _getSetGetDifferenceMultiQuery($setKeyA, array $setKeyN)
     {
       return array_merge(['SDIFF', $setKeyA], $setKeyN);
     }
@@ -1597,11 +1917,18 @@
     /**
      * @param $setKeyA
      * @param $setKeyB
-     * @return array|bool|Redis
+     * @return bool|mixed
      */
     public function setDifference($setKeyA, $setKeyB)
     {
-      return $this->_query($this->_getSetGetDifferenceMultiQuery($setKeyA, [$setKeyB]));
+      $response = $this->_query($this->_getSetGetDifferenceMultiQuery($setKeyA, [$setKeyB]));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1609,11 +1936,18 @@
     /**
      * @param $setKeyA
      * @param array $setKeyN
-     * @return array|bool|Redis
+     * @return bool|mixed
      */
     public function setGetDifferenceMulti($setKeyA, array $setKeyN)
     {
-      return $this->_query($this->_getSetGetDifferenceMultiQuery($setKeyA, $setKeyN));
+      $response = $this->_query($this->_getSetGetDifferenceMultiQuery($setKeyA, $setKeyN));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1624,7 +1958,7 @@
      * @param array $setKeyN
      * @return array
      */
-    private function _getSetStoreDifferenceMultiQuery($storeSetKey, $setKeyA, array $setKeyN)
+    protected function _getSetStoreDifferenceMultiQuery($storeSetKey, $setKeyA, array $setKeyN)
     {
       return array_merge(['SDIFFSTORE', $storeSetKey, $setKeyA], $setKeyN);
     }
@@ -1635,13 +1969,18 @@
      * @param $storeSetKey
      * @param $setKeyA
      * @param $setKeyB
-     * @return Redis
+     * @return bool|mixed
      */
     public function setStoreDifference($storeSetKey, $setKeyA, $setKeyB)
     {
       $response = $this->_query($this->_getSetStoreDifferenceMultiQuery($storeSetKey, $setKeyA, [$setKeyB]));
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1650,13 +1989,18 @@
      * @param $storeSetKey
      * @param $setKeyA
      * @param array $setKeyN
-     * @return Redis
+     * @return bool|mixed
      */
     public function setStoreDifferenceMulti($storeSetKey, $setKeyA, array $setKeyN)
     {
       $response = $this->_query($this->_getSetStoreDifferenceMultiQuery($storeSetKey, $setKeyA, $setKeyN));
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1666,7 +2010,7 @@
      * @param array $setKeyN
      * @return array
      */
-    private function _getSetGetIntersectionMultiQuery($setKeyA, array $setKeyN)
+    protected function _getSetGetIntersectionMultiQuery($setKeyA, array $setKeyN)
     {
       return array_merge(['SINTER', $setKeyA], $setKeyN);
     }
@@ -1676,11 +2020,18 @@
     /**
      * @param $setKeyA
      * @param $setKeyB
-     * @return array|bool|Redis
+     * @return bool|mixed
      */
     public function setIntersection($setKeyA, $setKeyB)
     {
-      return $this->_query($this->_getSetGetIntersectionMultiQuery($setKeyA, [$setKeyB]));
+      $response = $this->_query($this->_getSetGetIntersectionMultiQuery($setKeyA, [$setKeyB]));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1688,11 +2039,18 @@
     /**
      * @param $setKeyA
      * @param array $setKeyN
-     * @return array|bool|Redis
+     * @return bool|mixed
      */
     public function setGetIntersectionMulti($setKeyA, array $setKeyN)
     {
-      return $this->_query($this->_getSetGetIntersectionMultiQuery($setKeyA, $setKeyN));
+      $response = $this->_query($this->_getSetGetIntersectionMultiQuery($setKeyA, $setKeyN));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1703,7 +2061,7 @@
      * @param array $setKeyN
      * @return array
      */
-    private function _getSetStoreIntersectionMultiQuery($storeSetKey, $setKeyA, array $setKeyN)
+    protected function _getSetStoreIntersectionMultiQuery($storeSetKey, $setKeyA, array $setKeyN)
     {
       return array_merge(['SINTERSTORE', $storeSetKey, $setKeyA], $setKeyN);
     }
@@ -1714,13 +2072,18 @@
      * @param $storeSetKey
      * @param $setKeyA
      * @param $setKeyB
-     * @return Redis
+     * @return bool|mixed
      */
     public function setStoreIntersection($storeSetKey, $setKeyA, $setKeyB)
     {
       $response = $this->_query($this->_getSetStoreIntersectionMultiQuery($storeSetKey, $setKeyA, [$setKeyB]));
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1729,13 +2092,18 @@
      * @param $storeSetKey
      * @param $setKeyA
      * @param array $setKeyN
-     * @return Redis
+     * @return bool|mixed
      */
     public function setStoreIntersectionMulti($storeSetKey, $setKeyA, array $setKeyN)
     {
       $response = $this->_query($this->_getSetStoreIntersectionMultiQuery($storeSetKey, $setKeyA, $setKeyN));
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1745,7 +2113,7 @@
      * @param $value
      * @return array
      */
-    private function _getSetValueExistsQuery($key, $value)
+    protected function _getSetValueExistsQuery($key, $value)
     {
       return ['SISMEMBER', $key, $value];
     }
@@ -1755,11 +2123,18 @@
     /**
      * @param $key
      * @param $value
-     * @return array|bool|Redis
+     * @return bool|mixed
      */
     public function setValueExists($key, $value)
     {
-      return $this->_query($this->_getSetValueExistsQuery($key, $value));
+      $response = $this->_query($this->_getSetValueExistsQuery($key, $value));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1768,7 +2143,7 @@
      * @param $key
      * @return array
      */
-    private function _getSetGetValuesQuery($key)
+    protected function _getSetGetValuesQuery($key)
     {
       return ['SMEMBERS', $key];
     }
@@ -1777,11 +2152,43 @@
 
     /**
      * @param $key
-     * @return array|bool|Redis
+     * @return bool|mixed
      */
-    public function setGetValues($key)
+    public function setGetData($key)
     {
-      return $this->_query($this->_getSetGetValuesQuery($key));
+      $response = $this->_query($this->_getSetGetValuesQuery($key));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
+    }
+
+    // ##########################################
+
+    /**
+     * @param array $keys
+     * @return array|bool
+     */
+    public function setGetDataMulti(array $keys)
+    {
+      $this->_pipelineEnable(TRUE);
+
+      foreach($keys as $key)
+      {
+        $this->_pipelineAddQueueItem($this->_getSetGetValuesQuery($key));
+      }
+
+      $response = $this->_pipelineExecute();
+
+      if(empty($response['errors']))
+      {
+        return TRUE;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1792,7 +2199,7 @@
      * @param $value
      * @return array
      */
-    private function _getSetMoveValueQuery($setKeySource, $setKeyDestination, $value)
+    protected function _getSetMoveValueQuery($setKeySource, $setKeyDestination, $value)
     {
       return ['SMOVE', $setKeySource, $setKeyDestination, $value];
     }
@@ -1803,13 +2210,18 @@
      * @param $setKeySource
      * @param $setKeyDestination
      * @param $value
-     * @return Redis
+     * @return bool|mixed
      */
     public function setMoveValue($setKeySource, $setKeyDestination, $value)
     {
       $response = $this->_query($this->_getSetMoveValueQuery($setKeySource, $setKeyDestination, $value));
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1818,7 +2230,7 @@
      * @param $key
      * @return array
      */
-    private function _getSetPopRandomValueQuery($key)
+    protected function _getSetPopRandomValueQuery($key)
     {
       return ['SPOP', $key];
     }
@@ -1827,11 +2239,18 @@
 
     /**
      * @param $key
-     * @return array|bool|Redis
+     * @return bool|mixed
      */
     public function setPopRandomValue($key)
     {
-      return $this->_query($this->_getSetPopRandomValueQuery($key));
+      $response = $this->_query($this->_getSetPopRandomValueQuery($key));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1841,7 +2260,7 @@
      * @param int $amount
      * @return array
      */
-    private function _getSetGetRandomValuesQuery($key, $amount = 1)
+    protected function _getSetGetRandomValuesQuery($key, $amount = 1)
     {
       return ['SRANDMEMBER', $key, $amount];
     }
@@ -1851,11 +2270,18 @@
     /**
      * @param $key
      * @param int $amount
-     * @return array|bool|Redis
+     * @return bool|mixed
      */
     public function setGetRandomValues($key, $amount = 1)
     {
-      return $this->_query($this->_getSetGetRandomValuesQuery($key, $amount));
+      $response = $this->_query($this->_getSetGetRandomValuesQuery($key, $amount));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1865,7 +2291,7 @@
      * @param array $values
      * @return array
      */
-    private function _getSetDeleteValueMultiQuery($key, array $values)
+    protected function _getSetDeleteValueMultiQuery($key, array $values)
     {
       return array_merge(['SREM', $key], $values);
     }
@@ -1875,13 +2301,18 @@
     /**
      * @param $key
      * @param $value
-     * @return Redis
+     * @return bool|mixed
      */
     public function setDeleteValue($key, $value)
     {
       $response = $this->_query($this->_getSetDeleteValueMultiQuery($key, [$value]));
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1889,13 +2320,18 @@
     /**
      * @param $key
      * @param array $values
-     * @return Redis
+     * @return bool|mixed
      */
     public function setDeleteValueMulti($key, array $values)
     {
       $response = $this->_query($this->_getSetDeleteValueMultiQuery($key, $values));
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1905,7 +2341,7 @@
      * @param array $setKeysN
      * @return array
      */
-    private function _getSetGetMergeMultiQuery($setKeyA, array $setKeysN)
+    protected function _getSetGetMergeMultiQuery($setKeyA, array $setKeysN)
     {
       return array_merge(['SUNION', $setKeyA], $setKeysN);
     }
@@ -1915,11 +2351,18 @@
     /**
      * @param $setKeyA
      * @param $setKeyB
-     * @return array|bool|Redis
+     * @return bool|mixed
      */
     public function setMerge($setKeyA, $setKeyB)
     {
-      return $this->_query($this->_getSetGetMergeMultiQuery($setKeyA, [$setKeyB]));
+      $response = $this->_query($this->_getSetGetMergeMultiQuery($setKeyA, [$setKeyB]));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1927,11 +2370,18 @@
     /**
      * @param $setKeyA
      * @param array $setKeyN
-     * @return array|bool|Redis
+     * @return bool|mixed
      */
     public function setGetMergeMulti($setKeyA, array $setKeyN)
     {
-      return $this->_query($this->_getSetGetMergeMultiQuery($setKeyA, $setKeyN));
+      $response = $this->_query($this->_getSetGetMergeMultiQuery($setKeyA, $setKeyN));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1941,7 +2391,7 @@
      * @param array $setKeysN
      * @return array
      */
-    private function _getSetStoreMergeMultiQuery($setKeyA, array $setKeysN)
+    protected function _getSetStoreMergeMultiQuery($setKeyA, array $setKeysN)
     {
       return array_merge(['SUNIONSTORE', $setKeyA], $setKeysN);
     }
@@ -1951,11 +2401,18 @@
     /**
      * @param $setKeyA
      * @param $setKeyB
-     * @return array|bool|Redis
+     * @return bool|mixed
      */
     public function setStoreMerge($setKeyA, $setKeyB)
     {
-      return $this->_query($this->_getSetStoreMergeMultiQuery($setKeyA, [$setKeyB]));
+      $response = $this->_query($this->_getSetStoreMergeMultiQuery($setKeyA, [$setKeyB]));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -1963,37 +2420,54 @@
     /**
      * @param $setKeyA
      * @param array $setKeyN
-     * @return array|bool|Redis
+     * @return bool|mixed
      */
     public function setStoreMergeMulti($setKeyA, array $setKeyN)
     {
-      return $this->_query($this->_getSetStoreMergeMultiQuery($setKeyA, $setKeyN));
+      $response = $this->_query($this->_getSetStoreMergeMultiQuery($setKeyA, $setKeyN));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
 
     /**
      * @param $key
-     * @return Redis
+     * @return bool|mixed
      */
     public function setDelete($key)
     {
       $response = $this->keyDelete($key);
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
 
     /**
      * @param array $keys
-     * @return Redis
+     * @return bool|mixed
      */
     public function setDeleteMulti(array $keys)
     {
       $response = $this->keyDeleteMulti($keys);
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -2003,7 +2477,7 @@
      * @param array $scoreValuePairs
      * @return array
      */
-    private function _getSortedSetAddMultiQuery($key, array $scoreValuePairs)
+    protected function _getSortedSetAddMultiQuery($key, array $scoreValuePairs)
     {
       $flat = [];
 
@@ -2022,7 +2496,7 @@
      * @param $key
      * @param $score
      * @param $value
-     * @return Redis
+     * @return bool|mixed
      */
     public function sortedSetAdd($key, $score, $value)
     {
@@ -2033,21 +2507,31 @@
 
       $response = $this->_query($this->_getSortedSetAddMultiQuery($key, $scoreValuePair));
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
 
     /**
      * @param $key
-     * @param $scoreValuePairs
-     * @return Redis
+     * @param array $scoreValuePairs
+     * @return bool|mixed
      */
     public function sortedSetAddMulti($key, array $scoreValuePairs)
     {
       $response = $this->_query($this->_getSortedSetAddMultiQuery($key, $scoreValuePairs));
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -2056,7 +2540,7 @@
      * @param $key
      * @return array
      */
-    private function _getSortedSetGetCountQuery($key)
+    protected function _getSortedSetGetCountQuery($key)
     {
       return ['ZCARD', $key];
     }
@@ -2065,11 +2549,18 @@
 
     /**
      * @param $key
-     * @return array|bool|Redis
+     * @return bool|mixed
      */
     public function sortedSetGetCount($key)
     {
-      return $this->_query($this->_getSortedSetGetCountQuery($key));
+      $response = $this->_query($this->_getSortedSetGetCountQuery($key));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -2079,7 +2570,7 @@
      * @param array $values
      * @return array
      */
-    private function _getSortedSetDeleteValueMultiQuery($key, array $values)
+    protected function _getSortedSetDeleteValueMultiQuery($key, array $values)
     {
       return array_merge(['ZREM', $key], $values);
     }
@@ -2089,11 +2580,18 @@
     /**
      * @param $key
      * @param $value
-     * @return mixed
+     * @return bool|mixed
      */
     public function sortedSetDeleteValue($key, $value)
     {
-      return $this->_query($this->_getSortedSetDeleteValueMultiQuery($key, [$value]));
+      $response = $this->_query($this->_getSortedSetDeleteValueMultiQuery($key, [$value]));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -2101,11 +2599,18 @@
     /**
      * @param $key
      * @param array $values
-     * @return mixed
+     * @return bool|mixed
      */
     public function sortedSetDeleteValueMulti($key, array $values)
     {
-      return $this->_query($this->_getSortedSetDeleteValueMultiQuery($key, $values));
+      $response = $this->_query($this->_getSortedSetDeleteValueMultiQuery($key, $values));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -2116,7 +2621,7 @@
      * @param string $scoreEnd
      * @return array
      */
-    private function _getSortedSetGetRangeCountQuery($key, $scoreStart = '-inf', $scoreEnd = '+inf')
+    protected function _getSortedSetGetRangeCountQuery($key, $scoreStart = '-inf', $scoreEnd = '+inf')
     {
       return ['ZCOUNT', $key, $scoreStart, $scoreEnd];
     }
@@ -2127,11 +2632,18 @@
      * @param $key
      * @param string $scoreStart
      * @param string $scoreEnd
-     * @return mixed
+     * @return bool|mixed
      */
     public function sortedSetGetRangeCount($key, $scoreStart = '-inf', $scoreEnd = '+inf')
     {
-      return $this->_query($this->_getSortedSetGetRangeCountQuery($key, $scoreStart, $scoreEnd));
+      $response = $this->_query($this->_getSortedSetGetRangeCountQuery($key, $scoreStart, $scoreEnd));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -2142,7 +2654,7 @@
      * @param string $scoreEnd
      * @return array
      */
-    private function _getSortedSetGetRangeValuesQuery($key, $scoreStart, $scoreEnd)
+    protected function _getSortedSetGetRangeValuesQuery($key, $scoreStart, $scoreEnd)
     {
       return ['ZRANGE', $key, $scoreStart, $scoreEnd];
     }
@@ -2151,13 +2663,20 @@
 
     /**
      * @param $key
-     * @param string $scoreStart
-     * @param string $scoreEnd
-     * @return mixed
+     * @param $scoreStart
+     * @param $scoreEnd
+     * @return bool|mixed
      */
     public function sortedSetGetRangeValues($key, $scoreStart, $scoreEnd)
     {
-      return $this->_query($this->_getSortedSetGetRangeValuesQuery($key, $scoreStart, $scoreEnd));
+      $response = $this->_query($this->_getSortedSetGetRangeValuesQuery($key, $scoreStart, $scoreEnd));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -2168,7 +2687,7 @@
      * @param string $scoreEnd
      * @return array
      */
-    private function _getSortedSetGetRangeValuesWithScoresQuery($key, $scoreStart, $scoreEnd)
+    protected function _getSortedSetGetRangeValuesWithScoresQuery($key, $scoreStart, $scoreEnd)
     {
       return ['ZRANGE', $key, $scoreStart, $scoreEnd, 'WITHSCORES'];
     }
@@ -2177,15 +2696,15 @@
 
     /**
      * @param $key
-     * @param string $scoreStart
-     * @param string $scoreEnd
-     * @return mixed
+     * @param $scoreStart
+     * @param $scoreEnd
+     * @return array|bool
      */
     public function sortedSetGetRangeValuesWithScores($key, $scoreStart, $scoreEnd)
     {
       $response = $this->_query($this->_getSortedSetGetRangeValuesWithScoresQuery($key, $scoreStart, $scoreEnd));
 
-      if($response)
+      if($response != FALSE)
       {
         $setWithScores = [];
         $responseLength = count($response);
@@ -2211,7 +2730,7 @@
      * @param $value
      * @return array
      */
-    private function _getSortedSetGetValueIndexQuery($key, $value)
+    protected function _getSortedSetGetValueIndexQuery($key, $value)
     {
       return ['ZRANK', $key, $value];
     }
@@ -2221,11 +2740,18 @@
     /**
      * @param $key
      * @param $value
-     * @return mixed
+     * @return bool|mixed
      */
     public function sortedSetGetValueIndex($key, $value)
     {
-      return $this->_query($this->_getSortedSetGetValueIndexQuery($key, $value));
+      $response = $this->_query($this->_getSortedSetGetValueIndexQuery($key, $value));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
@@ -2235,7 +2761,7 @@
      * @param $value
      * @return array
      */
-    private function _getSortedSetGetValueScoreQuery($key, $value)
+    protected function _getSortedSetGetValueScoreQuery($key, $value)
     {
       return ['ZSCORE', $key, $value];
     }
@@ -2245,36 +2771,53 @@
     /**
      * @param $key
      * @param $value
-     * @return mixed
+     * @return bool|mixed
      */
     public function sortedSetGetValueScore($key, $value)
     {
-      return $this->_query($this->_getSortedSetGetValueScoreQuery($key, $value));
+      $response = $this->_query($this->_getSortedSetGetValueScoreQuery($key, $value));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
 
     /**
      * @param $key
-     * @return Redis
+     * @return bool|mixed
      */
     public function sortedSetDelete($key)
     {
       $response = $this->keyDelete($key);
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
 
     // ##########################################
 
     /**
      * @param array $keys
-     * @return Redis
+     * @return bool|mixed
      */
     public function sortedSetDeleteMulti(array $keys)
     {
       $response = $this->keyDeleteMulti($keys);
 
-      return $this;
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
     }
   }
