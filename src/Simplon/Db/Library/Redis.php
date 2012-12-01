@@ -171,7 +171,10 @@
      */
     protected function _pipelineAddQueueItem($cmdArgs)
     {
-      $this->_pipelineQueue[] = $cmdArgs;
+      if($cmdArgs !== FALSE)
+      {
+        $this->_pipelineQueue[] = $cmdArgs;
+      }
 
       return $this;
     }
@@ -1507,10 +1510,6 @@
       {
         $hash = [];
         $responseLength = count($response);
-
-        var_dump('==========');
-        var_dump($response);
-        var_dump('==========');
 
         for($i = 0; $i < $responseLength; $i += 2)
         {
