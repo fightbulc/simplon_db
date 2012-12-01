@@ -81,7 +81,7 @@
 
       $response = phpiredis_command_bs($this->_getRedisInstance(), $commandArgs);
 
-      if(substr($response, 0, 2) != 'ERR')
+      if(is_array($response) || substr($response, 0, 2) != 'ERR')
       {
         return $response;
       }
