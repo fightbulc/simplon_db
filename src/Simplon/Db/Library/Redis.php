@@ -81,7 +81,7 @@
 
       $response = phpiredis_command_bs($this->_getRedisInstance(), $commandArgs);
 
-      if(is_array($response) || substr($response, 0, 2) != 'ERR')
+      if(is_array($response) || substr($response, 0, 2) !== 'ERR')
       {
         return $response;
       }
@@ -111,14 +111,13 @@
       {
         $_requestKey = json_encode($_pipeline[$index]);
 
-        if(substr($response, 0, 3) == 'ERR')
-        {
-          $requestResponsesMulti['error'][$_requestKey] = $response;
-        }
-        else
+        if(is_array($response) || substr($response, 0, 3) !== 'ERR')
         {
           $requestResponsesMulti['responses'][$_requestKey] = $response;
+          continue;
         }
+
+        $requestResponsesMulti['error'][$_requestKey] = $response;
       }
 
       // reset request/response queues
@@ -1000,6 +999,56 @@
     // ##########################################
 
     /**
+     * @param $pairs
+     * @return array|bool
+     */
+    public function listMultiUnshift($pairs)
+    {
+      $this->_pipelineEnable(TRUE);
+
+      foreach($pairs as $listKey => $listValue)
+      {
+        $this->_pipelineAddQueueItem($this->_getListUnshiftMultiQuery($listKey, [$listValue]));
+      }
+
+      $response = $this->_pipelineExecute();
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
+    }
+
+    // ##########################################
+
+    /**
+     * @param $pairs
+     * @return array|bool
+     */
+    public function listMultiUnshiftMulti($pairs)
+    {
+      $this->_pipelineEnable(TRUE);
+
+      foreach($pairs as $listKey => $listValues)
+      {
+        $this->_pipelineAddQueueItem($this->_getListUnshiftMultiQuery($listKey, $listValues));
+      }
+
+      $response = $this->_pipelineExecute();
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
+    }
+
+    // ##########################################
+
+    /**
      * @param $key
      * @param $values
      * @return array
@@ -1126,9 +1175,36 @@
      * @param $end
      * @return bool|mixed
      */
-    public function listGetValuesByRange($key, $start, $end)
+    public function listGetDataByRange($key, $start, $end)
     {
       $response = $this->_query($this->_getListGetValuesByRangeQuery($key, $start, $end));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
+    }
+
+    // ##########################################
+
+    /**
+     * @param array $keys
+     * @param $start
+     * @param $end
+     * @return array|bool
+     */
+    public function listGetDataByRangeMulti(array $keys, $start, $end)
+    {
+      $this->_pipelineEnable(TRUE);
+
+      foreach($keys as $key)
+      {
+        $this->_pipelineAddQueueItem($this->_getListGetValuesByRangeQuery($key, $start, $end));
+      }
+
+      $response = $this->_pipelineExecute();
 
       if($response != FALSE)
       {
