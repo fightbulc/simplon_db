@@ -568,12 +568,41 @@
 
     /**
      * @param $key
+     * @return array
+     */
+    protected function _getKeyIncrementQuery($key)
+    {
+      return ['INCR', $key];
+    }
+
+    // ##########################################
+
+    /**
+     * @param $key
+     * @return bool|mixed
+     */
+    public function keyIncrement($key)
+    {
+      $response = $this->_query($this->_getKeyIncrementQuery($key));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
+    }
+
+    // ##########################################
+
+    /**
+     * @param $key
      * @param $value
      * @return array
      */
     protected function _getKeyIncrementByQuery($key, $value = 1)
     {
-      return ['INCRBY', $key, $value];
+      return ['INCRBY', $key, (string)$value];
     }
 
     // ##########################################
@@ -599,12 +628,41 @@
 
     /**
      * @param $key
+     * @return array
+     */
+    protected function _getKeyDecrementQuery($key)
+    {
+      return ['DECR', $key];
+    }
+
+    // ##########################################
+
+    /**
+     * @param $key
+     * @return bool|mixed
+     */
+    public function keyDecrement($key)
+    {
+      $response = $this->_query($this->_getKeyDecrementQuery($key));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
+    }
+
+    // ##########################################
+
+    /**
+     * @param $key
      * @param $value
      * @return array
      */
     protected function _getKeyDecrementByQuery($key, $value = 1)
     {
-      return ['DECRBY', $key, $value];
+      return ['DECRBY', $key, (string)$value];
     }
 
     // ##########################################
