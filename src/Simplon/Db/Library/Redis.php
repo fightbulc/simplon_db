@@ -1374,12 +1374,11 @@
     /**
      * @param $key
      * @param $index
-     * @param $value
      * @return array
      */
-    protected function _getListGetFromIndexQuery($key, $index, $value)
+    protected function _getListGetByIndexQuery($key, $index)
     {
-      return ['LINDEX', $key, $index, $value];
+      return ['LINDEX', $key, $index];
     }
 
     // ##########################################
@@ -1387,12 +1386,11 @@
     /**
      * @param $key
      * @param $index
-     * @param $value
      * @return bool|mixed
      */
-    public function listGetFromIndex($key, $index, $value)
+    public function listGetByIndex($key, $index)
     {
-      $response = $this->_query($this->_getListGetFromIndexQuery($key, $index, $value));
+      $response = $this->_query($this->_getListGetByIndexQuery($key, $index));
 
       if($response != FALSE)
       {
@@ -2602,14 +2600,14 @@
      * @param array $scoreValuePairs
      * @return array
      */
-    protected function _getSortedSetAddMultiQuery($key, array $scoreValuePairs)
+    protected function _getSortedSetAddValuesMultiQuery($key, array $scoreValuePairs)
     {
       $flat = [];
 
       foreach($scoreValuePairs as $pair)
       {
-        $flat[] = $pair['score'];
-        $flat[] = $pair['value'];
+        $flat[] = $pair[0];
+        $flat[] = $pair[1];
       }
 
       return array_merge(['ZADD', $key], $flat);
@@ -2623,14 +2621,44 @@
      * @param $value
      * @return bool|mixed
      */
-    public function sortedSetAdd($key, $score, $value)
+    public function sortedSetAddValue($key, $score, $value)
     {
       $scoreValuePair = [
-        'score' => $score,
-        'value' => $value
+        (string)$score,
+        (string)$value
       ];
 
-      $response = $this->_query($this->_getSortedSetAddMultiQuery($key, $scoreValuePair));
+      $response = $this->_query($this->_getSortedSetAddValuesMultiQuery($key, [$scoreValuePair]));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
+    }
+
+    // ##########################################
+
+    /**
+     * @param $pairs
+     * @return array|bool
+     */
+    public function sortedSetMultiAddValue($pairs)
+    {
+      $this->_pipelineEnable(TRUE);
+
+      foreach($pairs as $key => $setValues)
+      {
+        $scoreValuePair = [
+          (string)$setValues[0],
+          (string)$setValues[1]
+        ];
+
+        $this->_pipelineAddQueueItem($this->_getSortedSetAddValuesMultiQuery($key, [$scoreValuePair]));
+      }
+
+      $response = $this->_pipelineExecute();
 
       if($response != FALSE)
       {
@@ -2647,9 +2675,9 @@
      * @param array $scoreValuePairs
      * @return bool|mixed
      */
-    public function sortedSetAddMulti($key, array $scoreValuePairs)
+    public function sortedSetAddValuesMulti($key, array $scoreValuePairs)
     {
-      $response = $this->_query($this->_getSortedSetAddMultiQuery($key, $scoreValuePairs));
+      $response = $this->_query($this->_getSortedSetAddValuesMultiQuery($key, $scoreValuePairs));
 
       if($response != FALSE)
       {
@@ -2775,26 +2803,59 @@
 
     /**
      * @param $key
-     * @param string $scoreStart
-     * @param string $scoreEnd
+     * @param string $indexStart
+     * @param string $indexEnd
      * @return array
      */
-    protected function _getSortedSetGetRangeValuesQuery($key, $scoreStart, $scoreEnd)
+    protected function _getSortedSetGetDataByRangeQuery($key, $indexStart, $indexEnd)
     {
-      return ['ZRANGE', $key, $scoreStart, $scoreEnd];
+      return ['ZRANGE', $key, (string)$indexStart, (string)$indexEnd];
     }
 
     // ##########################################
 
     /**
      * @param $key
-     * @param $scoreStart
-     * @param $scoreEnd
+     * @param $indexStart
+     * @param $indexEnd
      * @return bool|mixed
      */
-    public function sortedSetGetRangeValues($key, $scoreStart, $scoreEnd)
+    public function sortedSetGetDataByRange($key, $indexStart, $indexEnd)
     {
-      $response = $this->_query($this->_getSortedSetGetRangeValuesQuery($key, $scoreStart, $scoreEnd));
+      $response = $this->_query($this->_getSortedSetGetDataByRangeQuery($key, $indexStart, $indexEnd));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
+    }
+
+    // ##########################################
+
+    /**
+     * @param $key
+     * @param string $indexStart
+     * @param string $indexEnd
+     * @return array
+     */
+    protected function _getSortedSetReverseGetDataByRangeQuery($key, $indexStart, $indexEnd)
+    {
+      return ['ZREVRANGE', $key, (string)$indexStart, (string)$indexEnd];
+    }
+
+    // ##########################################
+
+    /**
+     * @param $key
+     * @param $indexStart
+     * @param $indexEnd
+     * @return bool|mixed
+     */
+    public function sortedSetReverseGetDataByRange($key, $indexStart, $indexEnd)
+    {
+      $response = $this->_query($this->_getSortedSetReverseGetDataByRangeQuery($key, $indexStart, $indexEnd));
 
       if($response != FALSE)
       {
@@ -2812,7 +2873,7 @@
      * @param string $scoreEnd
      * @return array
      */
-    protected function _getSortedSetGetRangeValuesWithScoresQuery($key, $scoreStart, $scoreEnd)
+    protected function _getSortedSetGetDataByRangeWithScoresQuery($key, $scoreStart, $scoreEnd)
     {
       return ['ZRANGE', $key, $scoreStart, $scoreEnd, 'WITHSCORES'];
     }
@@ -2825,9 +2886,9 @@
      * @param $scoreEnd
      * @return array|bool
      */
-    public function sortedSetGetRangeValuesWithScores($key, $scoreStart, $scoreEnd)
+    public function sortedSetGetDataByRangeWithScores($key, $scoreStart, $scoreEnd)
     {
-      $response = $this->_query($this->_getSortedSetGetRangeValuesWithScoresQuery($key, $scoreStart, $scoreEnd));
+      $response = $this->_query($this->_getSortedSetGetDataByRangeWithScoresQuery($key, $scoreStart, $scoreEnd));
 
       if($response != FALSE)
       {
@@ -2855,7 +2916,7 @@
      * @param $value
      * @return array
      */
-    protected function _getSortedSetGetValueIndexQuery($key, $value)
+    protected function _getSortedSetGetIndexByValueQuery($key, $value)
     {
       return ['ZRANK', $key, $value];
     }
@@ -2867,9 +2928,9 @@
      * @param $value
      * @return bool|mixed
      */
-    public function sortedSetGetValueIndex($key, $value)
+    public function sortedSetGetIndexByValue($key, $value)
     {
-      $response = $this->_query($this->_getSortedSetGetValueIndexQuery($key, $value));
+      $response = $this->_query($this->_getSortedSetGetIndexByValueQuery($key, $value));
 
       if($response != FALSE)
       {
@@ -2886,7 +2947,38 @@
      * @param $value
      * @return array
      */
-    protected function _getSortedSetGetValueScoreQuery($key, $value)
+    protected function _getSortedSetReverseGetIndexByValueQuery($key, $value)
+    {
+      return ['ZREVRANK', $key, $value];
+    }
+
+    // ##########################################
+
+    /**
+     * @param $key
+     * @param $value
+     * @return bool|mixed
+     */
+    public function sortedSetReverseGetIndexByValue($key, $value)
+    {
+      $response = $this->_query($this->_getSortedSetReverseGetIndexByValueQuery($key, $value));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
+    }
+
+    // ##########################################
+
+    /**
+     * @param $key
+     * @param $value
+     * @return array
+     */
+    protected function _getSortedSetGetScoreByValueQuery($key, $value)
     {
       return ['ZSCORE', $key, $value];
     }
@@ -2898,9 +2990,9 @@
      * @param $value
      * @return bool|mixed
      */
-    public function sortedSetGetValueScore($key, $value)
+    public function sortedSetGetScoreByValue($key, $value)
     {
-      $response = $this->_query($this->_getSortedSetGetValueScoreQuery($key, $value));
+      $response = $this->_query($this->_getSortedSetGetScoreByValueQuery($key, $value));
 
       if($response != FALSE)
       {
