@@ -157,7 +157,7 @@
     {
       $response = $redisManager
         ->getRedisInstance()
-        ->listUnshift('list:pipe:OFF:' . $t . ':' . $i, 'hello world ' . $i);
+        ->listUnshiftValue('list:pipe:OFF:' . $t . ':' . $i, 'hello world ' . $i);
     }
 
     $finish = microtime(TRUE);
@@ -189,7 +189,7 @@
 
     $response = $redisManager
       ->getRedisInstance()
-      ->listMultiUnshift($pairs);
+      ->listMultiUnshiftValue($pairs);
 
     $finish = microtime(TRUE);
     $timeTaken = $finish - $start;
@@ -253,7 +253,7 @@
 
     $response = $redisManager
       ->getRedisInstance()
-      ->listGetDataByRangeMulti($pairs, 0, 50);
+      ->listMultiGetDataByRange($pairs, 0, 50);
 
     $finish = microtime(TRUE);
     $timeTaken = $finish - $start;

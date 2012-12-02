@@ -965,7 +965,7 @@
      * @param $value
      * @return bool|mixed
      */
-    public function listUnshift($key, $value)
+    public function listUnshiftValue($key, $value)
     {
       $response = $this->_query($this->_getListUnshiftMultiQuery($key, [$value]));
 
@@ -984,7 +984,7 @@
      * @param array $values
      * @return bool|mixed
      */
-    public function listUnshiftMulti($key, array $values)
+    public function listUnshiftValuesMulti($key, array $values)
     {
       $response = $this->_query($this->_getListUnshiftMultiQuery($key, $values));
 
@@ -999,14 +999,14 @@
     // ##########################################
 
     /**
-     * @param $pairs
+     * @param $listPairs
      * @return array|bool
      */
-    public function listMultiUnshift($pairs)
+    public function listMultiUnshiftValue($listPairs)
     {
       $this->_pipelineEnable(TRUE);
 
-      foreach($pairs as $listKey => $listValue)
+      foreach($listPairs as $listKey => $listValue)
       {
         $this->_pipelineAddQueueItem($this->_getListUnshiftMultiQuery($listKey, [$listValue]));
       }
@@ -1024,14 +1024,14 @@
     // ##########################################
 
     /**
-     * @param $pairs
+     * @param $listPairs
      * @return array|bool
      */
-    public function listMultiUnshiftMulti($pairs)
+    public function listMultiUnshiftValuesMulti($listPairs)
     {
       $this->_pipelineEnable(TRUE);
 
-      foreach($pairs as $listKey => $listValues)
+      foreach($listPairs as $listKey => $listValues)
       {
         $this->_pipelineAddQueueItem($this->_getListUnshiftMultiQuery($listKey, $listValues));
       }
@@ -1065,7 +1065,7 @@
      * @param $value
      * @return bool|mixed
      */
-    public function listPush($key, $value)
+    public function listPushValue($key, $value)
     {
       $response = $this->_query($this->_getListPushMultiQuery($key, [$value]));
 
@@ -1084,9 +1084,59 @@
      * @param array $values
      * @return bool|mixed
      */
-    public function listPushMulti($key, array $values)
+    public function listPushValuesMulti($key, array $values)
     {
       $response = $this->_query($this->_getListUnshiftMultiQuery($key, $values));
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
+    }
+
+    // ##########################################
+
+    /**
+     * @param $listPairs
+     * @return array|bool
+     */
+    public function listMultiPushValue($listPairs)
+    {
+      $this->_pipelineEnable(TRUE);
+
+      foreach($listPairs as $listKey => $listValue)
+      {
+        $this->_pipelineAddQueueItem($this->_getListPushMultiQuery($listKey, [$listValue]));
+      }
+
+      $response = $this->_pipelineExecute();
+
+      if($response != FALSE)
+      {
+        return $response;
+      }
+
+      return FALSE;
+    }
+
+    // ##########################################
+
+    /**
+     * @param $listPairs
+     * @return array|bool
+     */
+    public function listMultiPushValuesMulti($listPairs)
+    {
+      $this->_pipelineEnable(TRUE);
+
+      foreach($listPairs as $listKey => $listValues)
+      {
+        $this->_pipelineAddQueueItem($this->_getListPushMultiQuery($listKey, $listValues));
+      }
+
+      $response = $this->_pipelineExecute();
 
       if($response != FALSE)
       {
@@ -1195,7 +1245,7 @@
      * @param $end
      * @return array|bool
      */
-    public function listGetDataByRangeMulti(array $keys, $start, $end)
+    public function listMultiGetDataByRange(array $keys, $start, $end)
     {
       $this->_pipelineEnable(TRUE);
 
@@ -1238,7 +1288,7 @@
      * @param array $keys
      * @return array|bool
      */
-    public function listGetDataMulti(array $keys)
+    public function listMultiGetData(array $keys)
     {
       $this->_pipelineEnable(TRUE);
 
