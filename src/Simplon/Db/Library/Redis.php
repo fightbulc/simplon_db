@@ -74,7 +74,8 @@
      */
     protected function _query($commandArgs)
     {
-      if($commandArgs === FALSE)
+      // no connection || no commands?
+      if($this->_getRedisInstance() === FALSE || $commandArgs === FALSE)
       {
         return FALSE;
       }
@@ -103,6 +104,12 @@
      */
     protected function _pipelineExecute()
     {
+      // no connection?
+      if($this->_getRedisInstance() === FALSE)
+      {
+        return FALSE;
+      }
+
       $_pipeline = $this->_pipelineGetQueue();
 
       $requestResponsesMulti = [
