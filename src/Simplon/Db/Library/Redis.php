@@ -79,6 +79,13 @@
         return FALSE;
       }
 
+      // force strings only
+      foreach($commandArgs as $index => $command)
+      {
+        $commandArgs[$index] = (string)$command;
+      }
+
+      // query redis
       $response = phpiredis_command_bs($this->_getRedisInstance(), $commandArgs);
 
       if(is_array($response) || substr($response, 0, 2) !== 'ERR')
