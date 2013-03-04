@@ -23,17 +23,15 @@
      */
     public static function Instance($server, $database, $username, $password)
     {
-      $connectionString = 'mysql:host=' . $server . ';dbname=' . $database;
-      $poolId = $connectionString;
-
-      if(! array_key_exists($poolId, \EasyPDO::$Instance))
+      if(! \EasyPDO::$Instance)
       {
-        \EasyPDO::$Instance[$poolId] = new Mysql($connectionString, $username, $password);
+        $connectionString = 'mysql:host=' . $server . ';dbname=' . $database;
+        \EasyPDO::$Instance = new Mysql($connectionString, $username, $password);
 
         // we want results back as ASSOC Array
         \EasyPDO::SetFetchMode(\EasyPDO::FETCH_MODE_ASSOCIATIVE_ARRAY);
       }
 
-      return \EasyPDO::$Instance[$poolId];
+      return \EasyPDO::$Instance;
     }
   }
