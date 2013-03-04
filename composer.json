@@ -18,7 +18,7 @@
 
   "require": {
     "php": ">=5.4.8",
-    "fightbulc/easy_pdo": "0.1.7"
+    "fightbulc/easy_pdo": "0.1.8"
   },
 
   "suggest": {
