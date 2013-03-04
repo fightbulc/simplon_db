@@ -2,7 +2,7 @@
   "name": "simplon/db",
   "description": "Simplon DB Libraries",
   "homepage": "https://github.com/fightbulc/simplon_db",
-  "version": "0.5.2",
+  "version": "1.0.0",
   "type": "library",
   "keywords": ["db", "pdo", "mysql", "memcached", "couchbase", "redis"],
   "license": "MIT",
@@ -18,7 +18,7 @@
 
   "require": {
     "php": ">=5.4.8",
-    "fightbulc/easy_pdo": "dev-master"
+    "fightbulc/easy_pdo": "0.1.7"
   },
 
   "suggest": {
