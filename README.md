@@ -57,8 +57,6 @@ Lets do some coding given that all desired databases and its dependencies were i
 Lets create a MySQL connection instance:
 
 ```php
-<?php
-
 require __DIR__ . '/../vendor/autoload.php';
 
 // connect to server "localhost", db "test" with user/pass "rootuser/rootuser"
