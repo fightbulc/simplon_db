@@ -1,5 +1,7 @@
 <?php
 
+  use Simplon\Db\Library\Mysql;
+
   require __DIR__ . '/../vendor/autoload.php';
 
   echo '<h1>MySQL</h1>';
@@ -19,11 +21,12 @@
   $sqlManager = new \Simplon\Db\SqlManager($dbInstance);
 
   // query builder
-  $sqlQuery = new \Simplon\Db\SqlQueryBuilder();
-  $sqlQuery
+  $sqlQuery = (new \Simplon\Db\SqlQueryBuilder())
     ->setQuery($query)
     ->setConditions($conds);
 
   // query db
   $results = $sqlManager->fetchAll($sqlQuery);
   var_dump($results);
+
+
