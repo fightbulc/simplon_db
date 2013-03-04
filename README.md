@@ -7,7 +7,9 @@
                 |_|                                
 </pre>
 
-# Simplon/Db
+# Simplon/Db 
+
+Version 1.0.0
 
 ## Intro
 
@@ -66,8 +68,6 @@ $dbInstance = Mysql::Instance('localhost', 'test', 'rootuser', 'rootuser');
 Another way to create a mysql instance is via the ```DbInstance class```. This class creates the instance and holds it as Singleton throughout runtime within a pool of other connections - in case you have to keep more than one connection:
 
 ```php
-<?php
-
 require __DIR__ . '/../vendor/autoload.php';
 
 // connect to server "localhost", db "test" with user/pass "rootuser/rootuser"
@@ -79,8 +79,6 @@ $dbInstance = \Simplon\Db\DbInstance::MySQL('localhost', 'test', 'rootuser', 'ro
 When querying a database we have again two options. The first option is to access the database directly via [EasyPDO](https://github.com/fightbulc/easy_pdo) which is a PDO wrapper:
 
 ```php
-<?php
-
 require __DIR__ . '/../vendor/autoload.php';
 
 // connect to server "localhost", db "test" with user/pass "rootuser/rootuser"
@@ -98,8 +96,6 @@ var_dump($results);
 The other option requires the use of the ```SqlManager class```. In order to use this class we need to pass a builder pattern class, ```SqlQueryBuilder```, to communicate with our database. What advantage does that offer? Well in case that we want to do more things with our query before sending it off we encapsule it as an object within the ```SqlQueryBuilder```. From there on we could pass it throughout our application to add more data or alike before sending the query finally to the database:
 
 ```php
-<?php
-
 require __DIR__ . '/../vendor/autoload.php';
 
 // connect to server "localhost", db "test" with user/pass "rootuser/rootuser"
@@ -129,8 +125,6 @@ What both options have in common are the named parameters ```ekey = :key``` whic
 The way how to insert/update datasets differs for both options. Again see the following examples for better understanding:
 
 ```php
-<?php
-
 require __DIR__ . '/../vendor/autoload.php';
 
 // connect to server "localhost", db "test" with user/pass "rootuser/rootuser"
@@ -152,8 +146,6 @@ $dbInstance->ExecuteSQL('UPDATE INTO foobar VALUES (:ekey) WHERE id = :id', $dat
 Here goes our SqlManager solution with SqlQueryBuilder:
 
 ```php
-<?php
-
 require __DIR__ . '/../vendor/autoload.php';
 
 // connect to server "localhost", db "test" with user/pass "rootuser/rootuser"
@@ -191,8 +183,6 @@ Difference is that for the latter method we don't need to write any repetitive S
 From time to time we also need to remove a couple of datasets. Again, two examples:
 
 ```php
-<?php
-
 require __DIR__ . '/../vendor/autoload.php';
 
 // connect to server "localhost", db "test" with user/pass "rootuser/rootuser"
@@ -207,8 +197,6 @@ $dbInstance->ExecuteSQL('DELETE FROM foobar WHERE id = :id', ['id' => 5]);
 SqlManager with SqlQueryBuilder:
 
 ```php
-<?php
-
 require __DIR__ . '/../vendor/autoload.php';
 
 // connect to server "localhost", db "test" with user/pass "rootuser/rootuser"
