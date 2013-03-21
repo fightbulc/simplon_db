@@ -1,31 +1,31 @@
 <?php
 
-  namespace Simplon\Db;
+    namespace Simplon\Db;
 
-  use Simplon\Db\Library\Redis;
+    use Simplon\Db\Library\Redis;
 
-  class RedisManager
-  {
-    /** @var Redis */
-    private $_redisInstance;
-
-    // ########################################
-
-    /**
-     * @param Library\Redis $instance
-     */
-    public function __construct(Redis $instance)
+    class RedisManager
     {
-      $this->_redisInstance = $instance;
-    }
+        /** @var Redis */
+        private $_redisInstance;
 
-    // ########################################
+        // ########################################
 
-    /**
-     * @return Library\Redis
-     */
-    public function getRedisInstance()
-    {
-      return $this->_redisInstance;
+        /**
+         * @param Library\Redis $instance
+         */
+        public function __construct(Redis $instance)
+        {
+            $this->_redisInstance = $instance;
+        }
+
+        // ########################################
+
+        /**
+         * @return Library\Redis
+         */
+        public function getRedisInstance()
+        {
+            return $this->_redisInstance;
+        }
     }
-  }
