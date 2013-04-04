@@ -9,7 +9,7 @@
 
 # Simplon/Db 
 
-Version 1.0.2
+Version 1.1.0
 
 ## Intro
 
@@ -41,7 +41,7 @@ You can install Simplon/Db either via package download from github or via compos
 ```json
 {
   "require": {
-    "simplon/db": "1.0.2"
+    "simplon/db": "1.1.0"
   }
 }
 ```
@@ -275,3 +275,10 @@ $sqlManager->remove($sqlQuery);
 ## 2. Usage Redis
 
 Work in progress ...
+
+# Changelog
+
+## Version 1.1.0
+- Refactored Redis library since it had >3000 LOC
+- Redis library has been seperated by its commands
+- RedisManager offers references to all command classes
