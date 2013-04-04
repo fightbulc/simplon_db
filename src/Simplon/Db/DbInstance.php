@@ -2,10 +2,10 @@
 
     namespace Simplon\Db;
 
-    use Simplon\Db\Library\Mysql;
-    use Simplon\Db\Library\Redis;
     use Simplon\Db\Library\Couchbase;
     use Simplon\Db\Library\Memcached;
+    use Simplon\Db\Library\Mysql;
+    use Simplon\Db\Library\Redis\Redis;
 
     class DbInstance
     {
