@@ -9,7 +9,7 @@
 
 # Simplon/Db 
 
-Version 1.0.0
+Version 1.0.2
 
 ## Intro
 
@@ -41,7 +41,7 @@ You can install Simplon/Db either via package download from github or via compos
 ```json
 {
   "require": {
-    "simplon/db": "1.0.0"
+    "simplon/db": "1.0.2"
   }
 }
 ```
