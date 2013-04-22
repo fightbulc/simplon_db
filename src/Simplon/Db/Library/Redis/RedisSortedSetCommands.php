@@ -11,13 +11,14 @@
         /**
          * @param $key
          * @param array $scoreValuePairs
+         *
          * @return array
          */
-        protected function _getSortedSetAddValuesMultiQuery($key, array $scoreValuePairs)
+        protected function _getAddValuesMultiQuery($key, array $scoreValuePairs)
         {
             $flat = [];
 
-            foreach($scoreValuePairs as $pair)
+            foreach ($scoreValuePairs as $pair)
             {
                 $flat[] = $pair[0];
                 $flat[] = $pair[1];
@@ -32,9 +33,10 @@
          * @param $key
          * @param $score
          * @param $value
+         *
          * @return bool|mixed
          */
-        public function sortedSetAddValue($key, $score, $value)
+        public function addValue($key, $score, $value)
         {
             $scoreValuePair = [
                 (string)$score,
@@ -43,9 +45,9 @@
 
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getSortedSetAddValuesMultiQuery($key, [$scoreValuePair]));
+                ->query($this->_getAddValuesMultiQuery($key, [$scoreValuePair]));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -57,15 +59,16 @@
 
         /**
          * @param $pairs
+         *
          * @return array|bool
          */
-        public function sortedSetMultiAddValue($pairs)
+        public function multiAddValue($pairs)
         {
             $this
                 ->_getRedisInstance()
                 ->pipelineEnable(TRUE);
 
-            foreach($pairs as $key => $setValues)
+            foreach ($pairs as $key => $setValues)
             {
                 $scoreValuePair = [
                     (string)$setValues[0],
@@ -74,14 +77,14 @@
 
                 $this
                     ->_getRedisInstance()
-                    ->pipelineAddQueueItem($this->_getSortedSetAddValuesMultiQuery($key, [$scoreValuePair]));
+                    ->pipelineAddQueueItem($this->_getAddValuesMultiQuery($key, [$scoreValuePair]));
             }
 
             $response = $this
                 ->_getRedisInstance()
                 ->pipelineExecute();
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -94,15 +97,16 @@
         /**
          * @param $key
          * @param array $scoreValuePairs
+         *
          * @return bool|mixed
          */
-        public function sortedSetAddValuesMulti($key, array $scoreValuePairs)
+        public function addValuesMulti($key, array $scoreValuePairs)
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getSortedSetAddValuesMultiQuery($key, $scoreValuePairs));
+                ->query($this->_getAddValuesMultiQuery($key, $scoreValuePairs));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -114,9 +118,10 @@
 
         /**
          * @param $key
+         *
          * @return array
          */
-        protected function _getSortedSetGetCountQuery($key)
+        protected function _getCountQuery($key)
         {
             return ['ZCARD', $key];
         }
@@ -125,15 +130,16 @@
 
         /**
          * @param $key
+         *
          * @return bool|mixed
          */
-        public function sortedSetGetCount($key)
+        public function getCount($key)
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getSortedSetGetCountQuery($key));
+                ->query($this->_getCountQuery($key));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -146,9 +152,10 @@
         /**
          * @param $key
          * @param array $values
+         *
          * @return array
          */
-        protected function _getSortedSetDeleteValueMultiQuery($key, array $values)
+        protected function _getDeleteValueMultiQuery($key, array $values)
         {
             return array_merge(['ZREM', $key], $values);
         }
@@ -158,15 +165,16 @@
         /**
          * @param $key
          * @param $value
+         *
          * @return bool|mixed
          */
-        public function sortedSetDeleteValue($key, $value)
+        public function delete($key, $value)
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getSortedSetDeleteValueMultiQuery($key, [$value]));
+                ->query($this->_getDeleteValueMultiQuery($key, [$value]));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -179,15 +187,16 @@
         /**
          * @param $key
          * @param array $values
+         *
          * @return bool|mixed
          */
-        public function sortedSetDeleteValueMulti($key, array $values)
+        public function deleteMulti($key, array $values)
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getSortedSetDeleteValueMultiQuery($key, $values));
+                ->query($this->_getDeleteValueMultiQuery($key, $values));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -201,9 +210,10 @@
          * @param $key
          * @param string $scoreStart
          * @param string $scoreEnd
+         *
          * @return array
          */
-        protected function _getSortedSetGetRangeCountQuery($key, $scoreStart = '-inf', $scoreEnd = '+inf')
+        protected function _getRangeCountQuery($key, $scoreStart = '-inf', $scoreEnd = '+inf')
         {
             return ['ZCOUNT', $key, $scoreStart, $scoreEnd];
         }
@@ -214,15 +224,16 @@
          * @param $key
          * @param string $scoreStart
          * @param string $scoreEnd
+         *
          * @return bool|mixed
          */
-        public function sortedSetGetRangeCount($key, $scoreStart = '-inf', $scoreEnd = '+inf')
+        public function getRangeCount($key, $scoreStart = '-inf', $scoreEnd = '+inf')
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getSortedSetGetRangeCountQuery($key, $scoreStart, $scoreEnd));
+                ->query($this->_getRangeCountQuery($key, $scoreStart, $scoreEnd));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -236,9 +247,10 @@
          * @param $key
          * @param string $indexStart
          * @param string $indexEnd
+         *
          * @return array
          */
-        protected function _getSortedSetGetDataByRangeQuery($key, $indexStart, $indexEnd)
+        protected function _getValuesByRangeQuery($key, $indexStart, $indexEnd)
         {
             return ['ZRANGE', $key, (string)$indexStart, (string)$indexEnd];
         }
@@ -249,17 +261,18 @@
          * @param $key
          * @param $indexStart
          * @param $limit
+         *
          * @return bool|mixed
          */
-        public function sortedSetGetDataByRange($key, $indexStart, $limit)
+        public function getValuesByRange($key, $indexStart, $limit)
         {
             $limit = $this->_calcRangeLimit($indexStart, $limit);
 
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getSortedSetGetDataByRangeQuery($key, $indexStart, $limit));
+                ->query($this->_getValuesByRangeQuery($key, $indexStart, $limit));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -273,9 +286,10 @@
          * @param $key
          * @param string $indexStart
          * @param string $indexEnd
+         *
          * @return array
          */
-        protected function _getSortedSetReverseGetDataByRangeQuery($key, $indexStart, $indexEnd)
+        protected function _getValuesByRangeReverseQuery($key, $indexStart, $indexEnd)
         {
             return ['ZREVRANGE', $key, (string)$indexStart, (string)$indexEnd];
         }
@@ -286,17 +300,18 @@
          * @param $key
          * @param $indexStart
          * @param $limit
+         *
          * @return bool|mixed
          */
-        public function sortedSetReverseGetDataByRange($key, $indexStart, $limit)
+        public function getValuesByRangeReverse($key, $indexStart, $limit)
         {
             $limit = $this->_calcRangeLimit($indexStart, $limit);
 
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getSortedSetReverseGetDataByRangeQuery($key, $indexStart, $limit));
+                ->query($this->_getValuesByRangeReverseQuery($key, $indexStart, $limit));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -310,9 +325,10 @@
          * @param $key
          * @param string $scoreStart
          * @param string $scoreEnd
+         *
          * @return array
          */
-        protected function _getSortedSetGetDataByRangeWithScoresQuery($key, $scoreStart, $scoreEnd)
+        protected function _getValuesByRangeWithScoresQuery($key, $scoreStart, $scoreEnd)
         {
             return ['ZRANGE', $key, $scoreStart, $scoreEnd, 'WITHSCORES'];
         }
@@ -323,20 +339,21 @@
          * @param $key
          * @param $scoreStart
          * @param $scoreEnd
+         *
          * @return array|bool
          */
-        public function sortedSetGetDataByRangeWithScores($key, $scoreStart, $scoreEnd)
+        public function getValuesByRangeWithScores($key, $scoreStart, $scoreEnd)
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getSortedSetGetDataByRangeWithScoresQuery($key, $scoreStart, $scoreEnd));
+                ->query($this->_getValuesByRangeWithScoresQuery($key, $scoreStart, $scoreEnd));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 $setWithScores = [];
                 $responseLength = count($response);
 
-                for($i = 0; $i < $responseLength; $i += 2)
+                for ($i = 0; $i < $responseLength; $i += 2)
                 {
                     $setWithScores[] = [
                         'score' => $response[$i],
@@ -355,9 +372,10 @@
         /**
          * @param $key
          * @param $value
+         *
          * @return array
          */
-        protected function _getSortedSetGetIndexByValueQuery($key, $value)
+        protected function _getIndexByValueQuery($key, $value)
         {
             return ['ZRANK', $key, $value];
         }
@@ -367,15 +385,16 @@
         /**
          * @param $key
          * @param $value
+         *
          * @return bool|mixed
          */
-        public function sortedSetGetIndexByValue($key, $value)
+        public function getIndexByValue($key, $value)
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getSortedSetGetIndexByValueQuery($key, $value));
+                ->query($this->_getIndexByValueQuery($key, $value));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -388,9 +407,10 @@
         /**
          * @param $key
          * @param $value
+         *
          * @return array
          */
-        protected function _getSortedSetReverseGetIndexByValueQuery($key, $value)
+        protected function _getIndexByValueReverseQuery($key, $value)
         {
             return ['ZREVRANK', $key, $value];
         }
@@ -400,15 +420,16 @@
         /**
          * @param $key
          * @param $value
+         *
          * @return bool|mixed
          */
-        public function sortedSetReverseGetIndexByValue($key, $value)
+        public function getIndexByValueReverse($key, $value)
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getSortedSetReverseGetIndexByValueQuery($key, $value));
+                ->query($this->_getIndexByValueReverseQuery($key, $value));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -421,9 +442,10 @@
         /**
          * @param $key
          * @param $value
+         *
          * @return array
          */
-        protected function _getSortedSetGetScoreByValueQuery($key, $value)
+        protected function _getScoreByValueQuery($key, $value)
         {
             return ['ZSCORE', $key, $value];
         }
@@ -433,55 +455,16 @@
         /**
          * @param $key
          * @param $value
+         *
          * @return bool|mixed
          */
-        public function sortedSetGetScoreByValue($key, $value)
+        public function getScoreByValue($key, $value)
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getSortedSetGetScoreByValueQuery($key, $value));
+                ->query($this->_getScoreByValueQuery($key, $value));
 
-            if($response != FALSE)
-            {
-                return $response;
-            }
-
-            return FALSE;
-        }
-
-        // ##########################################
-
-        /**
-         * @param $key
-         * @return bool|mixed
-         */
-        public function sortedSetDelete($key)
-        {
-            $response = $this
-                ->_getRedisInstance()
-                ->keyDelete($key);
-
-            if($response != FALSE)
-            {
-                return $response;
-            }
-
-            return FALSE;
-        }
-
-        // ##########################################
-
-        /**
-         * @param array $keys
-         * @return bool|mixed
-         */
-        public function sortedSetDeleteMulti(array $keys)
-        {
-            $response = $this
-                ->_getRedisInstance()
-                ->keyDeleteMulti($keys);
-
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }

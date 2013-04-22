@@ -9,11 +9,11 @@
     $listKey = 'list:foo';
 
     $redisManager
-        ->getRedisListCommandsInstance()
+        ->getListCommandsInstance()
         ->listPushValue($listKey, 'bar');
 
     $data = $redisManager
-        ->getRedisListCommandsInstance()
+        ->getListCommandsInstance()
         ->listGetData($listKey);
 
     $json = json_encode($data);

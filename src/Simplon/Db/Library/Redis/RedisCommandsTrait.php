@@ -24,6 +24,48 @@
             return $this->_redisInstance;
         }
 
+        // ##########################################
+
+        /**
+         * @param $key
+         *
+         * @return bool|mixed
+         */
+        public function delete($key)
+        {
+            $response = $this
+                ->_getRedisInstance()
+                ->keyDelete($key);
+
+            if ($response != FALSE)
+            {
+                return $response;
+            }
+
+            return FALSE;
+        }
+
+        // ##########################################
+
+        /**
+         * @param array $keys
+         *
+         * @return bool|mixed
+         */
+        public function deleteMulti(array $keys)
+        {
+            $response = $this
+                ->_getRedisInstance()
+                ->keyDeleteMulti($keys);
+
+            if ($response != FALSE)
+            {
+                return $response;
+            }
+
+            return FALSE;
+        }
+
         // ######################################
 
         /**

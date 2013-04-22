@@ -9,31 +9,33 @@
         // ##########################################
 
         /**
-         * @param $hashKey
-         * @param $fieldId
+         * @param $hashId
+         * @param $keyId
          * @param $value
+         *
          * @return array
          */
-        protected function _getHashSetFieldQuery($hashKey, $fieldId, $value)
+        protected function _getSetKeyValueQuery($hashId, $keyId, $value)
         {
-            return ['HSET', $hashKey, $fieldId, $value];
+            return ['HSET', $hashId, $keyId, $value];
         }
 
         // ##########################################
 
         /**
-         * @param $hashKey
-         * @param $fieldId
+         * @param $hashId
+         * @param $keyId
          * @param int $value
+         *
          * @return bool|mixed
          */
-        public function hashSetField($hashKey, $fieldId, $value = 1)
+        public function setKeyValue($hashId, $keyId, $value = 1)
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getHashSetFieldQuery($hashKey, $fieldId, (string)$value));
+                ->query($this->_getSetKeyValueQuery($hashId, $keyId, (string)$value));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -44,31 +46,39 @@
         // ##########################################
 
         /**
-         * @param $hashKey
+         * @param $hashId
          * @param $pairs
+         *
          * @return array
          */
-        protected function _getHashSetFieldsMultiQuery($hashKey, $pairs)
+        protected function _getSetKeyValueMultiQuery($hashId, $pairs)
         {
             $flat = [];
 
-            foreach($pairs as $fieldId => $value)
+            foreach ($pairs as $keyId => $value)
             {
-                $flat[] = $fieldId;
+                $flat[] = $keyId;
                 $flat[] = (string)$value;
             }
 
-            return array_merge(['HMSET'], [$hashKey], $flat);
+            return array_merge(['HMSET'], [$hashId], $flat);
         }
 
         // ######################################
-        // TODO: hotfix until we figure a way for using the protected method from RedisBase
 
-        protected function _getKeySetExpireQuery($key, $seconds = -1)
+        /**
+         * TODO: hotfix until we figure a way for using the protected method from RedisBase
+         *
+         * @param $hashId
+         * @param $seconds
+         *
+         * @return array|bool
+         */
+        protected function _getSetExpireQuery($hashId, $seconds = -1)
         {
-            if($seconds > 0)
+            if ($seconds > 0)
             {
-                return ['EXPIRE', $key, (string)$seconds];
+                return ['EXPIRE', $hashId, (string)$seconds];
             }
 
             return FALSE;
@@ -77,12 +87,13 @@
         // ##########################################
 
         /**
-         * @param $hashKey
+         * @param $hashId
          * @param $pairs
          * @param $expire
+         *
          * @return array|bool
          */
-        public function hashSetFieldsMulti($hashKey, $pairs, $expire = -1)
+        public function setKeyValueMulti($hashId, $pairs, $expire = -1)
         {
             $this
                 ->_getRedisInstance()
@@ -90,17 +101,17 @@
 
             $this
                 ->_getRedisInstance()
-                ->pipelineAddQueueItem($this->_getHashSetFieldsMultiQuery($hashKey, $pairs));
+                ->pipelineAddQueueItem($this->_getSetKeyValueMultiQuery($hashId, $pairs));
 
             $this
                 ->_getRedisInstance()
-                ->pipelineAddQueueItem($this->_getKeySetExpireQuery($hashKey, $expire));
+                ->pipelineAddQueueItem($this->_getSetExpireQuery($hashId, $expire));
 
             $response = $this
                 ->_getRedisInstance()
                 ->pipelineExecute();
 
-            if(empty($response['errors']))
+            if (empty($response['errors']))
             {
                 return TRUE;
             }
@@ -111,29 +122,31 @@
         // ##########################################
 
         /**
-         * @param $hashKey
-         * @param $fieldId
+         * @param $hashId
+         * @param $keyId
+         *
          * @return array
          */
-        protected function _getHashGetFieldQuery($hashKey, $fieldId)
+        protected function _getKeyValueQuery($hashId, $keyId)
         {
-            return ['HGET', $hashKey, $fieldId];
+            return ['HGET', $hashId, $keyId];
         }
 
         // ##########################################
 
         /**
-         * @param $hashKey
-         * @param $fieldId
+         * @param $hashId
+         * @param $keyId
+         *
          * @return bool|mixed
          */
-        public function hashGetField($hashKey, $fieldId)
+        public function getKeyValue($hashId, $keyId)
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getHashGetFieldQuery($hashKey, $fieldId));
+                ->query($this->_getKeyValueQuery($hashId, $keyId));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -144,29 +157,31 @@
         // ##########################################
 
         /**
-         * @param $hashKey
-         * @param $fieldIds
+         * @param $hashId
+         * @param $keyIds
+         *
          * @return array
          */
-        protected function _getHashGetFieldsMultiQuery($hashKey, $fieldIds)
+        protected function _getKeyValueMultiQuery($hashId, $keyIds)
         {
-            return array_merge(['HMGET', $hashKey], $fieldIds);
+            return array_merge(['HMGET', $hashId], $keyIds);
         }
 
         // ##########################################
 
         /**
-         * @param $hashKey
-         * @param $fieldIds
+         * @param $hashId
+         * @param $keyIds
+         *
          * @return bool|mixed
          */
-        public function hashGetFieldsMulti($hashKey, $fieldIds)
+        public function getKeyValueMulti($hashId, $keyIds)
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getHashGetFieldsMultiQuery($hashKey, $fieldIds));
+                ->query($this->_getKeyValueMultiQuery($hashId, $keyIds));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -177,36 +192,38 @@
         // ##########################################
 
         /**
-         * @param $hashKey
+         * @param $hashId
+         *
          * @return array
          */
-        protected function _getHashDataQuery($hashKey)
+        protected function _getKeysAndValuesQuery($hashId)
         {
-            return array_merge(['HGETALL', $hashKey]);
+            return array_merge(['HGETALL', $hashId]);
         }
 
         // ##########################################
 
         /**
-         * @param $hashKey
+         * @param $hashId
+         *
          * @return array|bool
          */
-        public function hashGetData($hashKey)
+        public function getKeysAndValues($hashId)
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getHashDataQuery($hashKey));
+                ->query($this->_getKeysAndValuesQuery($hashId));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 $hash = [];
                 $responseLength = count($response);
 
-                for($i = 0; $i < $responseLength; $i += 2)
+                for ($i = 0; $i < $responseLength; $i += 2)
                 {
-                    $fieldId = $response[$i];
+                    $keyId = $response[$i];
                     $value = $response[$i + 1];
-                    $hash[$fieldId] = $value;
+                    $hash[$keyId] = $value;
                 }
 
                 return $hash;
@@ -218,27 +235,28 @@
         // ##########################################
 
         /**
-         * @param array $hashKeys
+         * @param array $hashIds
+         *
          * @return array|bool
          */
-        public function hashGetDataMulti(array $hashKeys)
+        public function getKeysAndValuesMulti(array $hashIds)
         {
             $this
                 ->_getRedisInstance()
                 ->pipelineEnable(TRUE);
 
-            foreach($hashKeys as $hashKey)
+            foreach ($hashIds as $k)
             {
                 $this
                     ->_getRedisInstance()
-                    ->pipelineAddQueueItem($this->_getHashDataQuery($hashKey));
+                    ->pipelineAddQueueItem($this->_getKeysAndValuesQuery($k));
             }
 
             $response = $this
                 ->_getRedisInstance()
                 ->pipelineExecute();
 
-            if(empty($response['errors']))
+            if (empty($response['errors']))
             {
                 return TRUE;
             }
@@ -249,29 +267,31 @@
         // ##########################################
 
         /**
-         * @param $hashKey
-         * @param $fieldId
+         * @param $hashId
+         * @param $hashIdId
+         *
          * @return array
          */
-        protected function _getHashFieldExistsQuery($hashKey, $fieldId)
+        protected function _getHasKeyQuery($hashId, $hashIdId)
         {
-            return ['HEXISTS', $hashKey, $fieldId];
+            return ['HEXISTS', $hashId, $hashIdId];
         }
 
         // ##########################################
 
         /**
-         * @param $hashKey
-         * @param $fieldId
+         * @param $hashId
+         * @param $hashIdId
+         *
          * @return bool|mixed
          */
-        public function hashFieldExists($hashKey, $fieldId)
+        public function hasKey($hashId, $hashIdId)
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getHashFieldExistsQuery($hashKey, $fieldId));
+                ->query($this->_getHasKeyQuery($hashId, $hashIdId));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -282,27 +302,29 @@
         // ##########################################
 
         /**
-         * @param $hashKey
-         * @param $fieldIds
+         * @param $hashId
+         * @param $hashIdIds
+         *
          * @return array
          */
-        protected function _getHashDeleteFieldMultiQuery($hashKey, array $fieldIds)
+        protected function _getDeleteKeyMultiQuery($hashId, array $hashIdIds)
         {
-            return array_merge(['HDEL', $hashKey], $fieldIds);
+            return array_merge(['HDEL', $hashId], $hashIdIds);
         }
 
         // ##########################################
 
         /**
-         * @param $hashKey
-         * @param $fieldId
+         * @param $hashId
+         * @param $keyId
+         *
          * @return bool|mixed
          */
-        public function hashDeleteField($hashKey, $fieldId)
+        public function deleteKey($hashId, $keyId)
         {
-            $response = $this->hashDeleteFieldMulti($hashKey, [$fieldId]);
+            $response = $this->deleteKeyMulti($hashId, [$keyId]);
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -313,17 +335,18 @@
         // ##########################################
 
         /**
-         * @param $hashKey
-         * @param array $fieldIds
+         * @param $hashId
+         * @param array $keyIds
+         *
          * @return bool|mixed
          */
-        public function hashDeleteFieldMulti($hashKey, array $fieldIds)
+        public function deleteKeyMulti($hashId, array $keyIds)
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getHashDeleteFieldMultiQuery($hashKey, $fieldIds));
+                ->query($this->_getDeleteKeyMultiQuery($hashId, $keyIds));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -334,27 +357,29 @@
         // ##########################################
 
         /**
-         * @param $hashKey
+         * @param $hashId
+         *
          * @return array
          */
-        protected function _getHashGetKeysQuery($hashKey)
+        protected function _getKeysQuery($hashId)
         {
-            return ['HKEYS', $hashKey];
+            return ['HKEYS', $hashId];
         }
 
         // ##########################################
 
         /**
-         * @param $hashKey
+         * @param $hashId
+         *
          * @return bool|mixed
          */
-        public function hashGetKeys($hashKey)
+        public function getKeys($hashId)
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getHashGetKeysQuery($hashKey));
+                ->query($this->_getKeysQuery($hashId));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -365,27 +390,29 @@
         // ##########################################
 
         /**
-         * @param $hashKey
+         * @param $hashId
+         *
          * @return array
          */
-        protected function _getHashGetValuesQuery($hashKey)
+        protected function _getValuesQuery($hashId)
         {
-            return ['HVALS', $hashKey];
+            return ['HVALS', $hashId];
         }
 
         // ##########################################
 
         /**
-         * @param $hashKey
+         * @param $hashId
+         *
          * @return bool|mixed
          */
-        public function hashGetValues($hashKey)
+        public function getValues($hashId)
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getHashGetValuesQuery($hashKey));
+                ->query($this->_getValuesQuery($hashId));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -396,27 +423,29 @@
         // ##########################################
 
         /**
-         * @param $hashKey
+         * @param $hashId
+         *
          * @return array
          */
-        protected function _getHashGetFieldsCountQuery($hashKey)
+        protected function _getKeysCountQuery($hashId)
         {
-            return ['HLEN', $hashKey];
+            return ['HLEN', $hashId];
         }
 
         // ##########################################
 
         /**
-         * @param $hashKey
+         * @param $hashId
+         *
          * @return bool|mixed
          */
-        public function hashGetFieldsCount($hashKey)
+        public function getKeysCount($hashId)
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getHashGetFieldsCountQuery($hashKey));
+                ->query($this->_getKeysCountQuery($hashId));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -427,29 +456,31 @@
         // ##########################################
 
         /**
-         * @param $hashKey
+         * @param $hashId
          * @param $value
+         *
          * @return array
          */
-        protected function _getHashIncrementByQuery($hashKey, $value)
+        protected function _getIncrementByQuery($hashId, $value)
         {
-            return ['HINCRBY', $hashKey, $value];
+            return ['HINCRBY', $hashId, $value];
         }
 
         // ##########################################
 
         /**
-         * @param $hashKey
+         * @param $hashId
          * @param $value
+         *
          * @return bool|mixed
          */
-        public function hashIncrementBy($hashKey, $value)
+        public function incrementBy($hashId, $value)
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getHashIncrementByQuery($hashKey, $value));
+                ->query($this->_getIncrementByQuery($hashId, $value));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -460,74 +491,36 @@
         // ##########################################
 
         /**
-         * @param $hashKey
+         * @param $hashId
          * @param $value
+         *
          * @return array
          */
-        protected function _getHashDecrementByQuery($hashKey, $value)
+        protected function _getDecrementByQuery($hashId, $value)
         {
-            if($value > 0)
+            if ($value > 0)
             {
                 $value = '-' . $value;
             }
 
-            return ['HINCRBY', $hashKey, $value];
+            return ['HINCRBY', $hashId, $value];
         }
 
         // ##########################################
 
         /**
-         * @param $hashKey
+         * @param $hashId
          * @param $value
+         *
          * @return bool|mixed
          */
-        public function hashDecrementBy($hashKey, $value)
+        public function decrementBy($hashId, $value)
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getHashDecrementByQuery($hashKey, $value));
+                ->query($this->_getDecrementByQuery($hashId, $value));
 
-            if($response != FALSE)
-            {
-                return $response;
-            }
-
-            return FALSE;
-        }
-
-        // ##########################################
-
-        /**
-         * @param $key
-         * @return bool|mixed
-         */
-        public function hashDelete($key)
-        {
-            $response = $this
-                ->_getRedisInstance()
-                ->keyDelete($key);
-
-            if($response != FALSE)
-            {
-                return $response;
-            }
-
-            return FALSE;
-        }
-
-        // ##########################################
-
-        /**
-         * @param array $keys
-         * @return bool|mixed
-         */
-        public function hashDeleteMulti(array $keys)
-        {
-            $response = $this
-                ->_getRedisInstance()
-                ->keyDeleteMulti($keys);
-
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }

@@ -11,9 +11,10 @@
         /**
          * @param $key
          * @param $values
+         *
          * @return array
          */
-        protected function _getListUnshiftMultiQuery($key, array $values)
+        protected function _getUnshiftMultiQuery($key, array $values)
         {
             return array_merge(['LPUSH', $key], $values);
         }
@@ -23,15 +24,16 @@
         /**
          * @param $key
          * @param $value
+         *
          * @return bool|mixed
          */
-        public function listUnshiftValue($key, $value)
+        public function unshiftValue($key, $value)
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getListUnshiftMultiQuery($key, [$value]));
+                ->query($this->_getUnshiftMultiQuery($key, [$value]));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -44,15 +46,16 @@
         /**
          * @param $key
          * @param array $values
+         *
          * @return bool|mixed
          */
-        public function listUnshiftValuesMulti($key, array $values)
+        public function unshiftValueMulti($key, array $values)
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getListUnshiftMultiQuery($key, $values));
+                ->query($this->_getUnshiftMultiQuery($key, $values));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -63,27 +66,28 @@
         // ##########################################
 
         /**
-         * @param $listPairs
+         * @param $pairs
+         *
          * @return array|bool
          */
-        public function listMultiUnshiftValue($listPairs)
+        public function multiListUnshiftValue($pairs)
         {
             $this
                 ->_getRedisInstance()
                 ->pipelineEnable(TRUE);
 
-            foreach($listPairs as $listKey => $listValue)
+            foreach ($pairs as $key => $value)
             {
                 $this
                     ->_getRedisInstance()
-                    ->pipelineAddQueueItem($this->_getListUnshiftMultiQuery($listKey, [$listValue]));
+                    ->pipelineAddQueueItem($this->_getUnshiftMultiQuery($key, [$value]));
             }
 
             $response = $this
                 ->_getRedisInstance()
                 ->pipelineExecute();
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -94,27 +98,28 @@
         // ##########################################
 
         /**
-         * @param $listPairs
+         * @param $pairs
+         *
          * @return array|bool
          */
-        public function listMultiUnshiftValuesMulti($listPairs)
+        public function multiListUnshiftValueMulti($pairs)
         {
             $this
                 ->_getRedisInstance()
                 ->pipelineEnable(TRUE);
 
-            foreach($listPairs as $listKey => $listValues)
+            foreach ($pairs as $key => $values)
             {
                 $this
                     ->_getRedisInstance()
-                    ->pipelineAddQueueItem($this->_getListUnshiftMultiQuery($listKey, $listValues));
+                    ->pipelineAddQueueItem($this->_getUnshiftMultiQuery($key, $values));
             }
 
             $response = $this
                 ->_getRedisInstance()
                 ->pipelineExecute();
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -127,9 +132,10 @@
         /**
          * @param $key
          * @param $values
+         *
          * @return array
          */
-        protected function _getListPushMultiQuery($key, array $values)
+        protected function _getPushMultiQuery($key, array $values)
         {
             return array_merge(['RPUSH', $key], $values);
         }
@@ -139,15 +145,16 @@
         /**
          * @param $key
          * @param $value
+         *
          * @return bool|mixed
          */
-        public function listPushValue($key, $value)
+        public function pushValue($key, $value)
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getListPushMultiQuery($key, [$value]));
+                ->query($this->_getPushMultiQuery($key, [$value]));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -160,15 +167,16 @@
         /**
          * @param $key
          * @param array $values
+         *
          * @return bool|mixed
          */
-        public function listPushValuesMulti($key, array $values)
+        public function pushValueMulti($key, array $values)
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getListUnshiftMultiQuery($key, $values));
+                ->query($this->_getUnshiftMultiQuery($key, $values));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -179,27 +187,28 @@
         // ##########################################
 
         /**
-         * @param $listPairs
+         * @param $pairs
+         *
          * @return array|bool
          */
-        public function listMultiPushValue($listPairs)
+        public function multiListPushValue($pairs)
         {
             $this
                 ->_getRedisInstance()
                 ->pipelineEnable(TRUE);
 
-            foreach($listPairs as $listKey => $listValue)
+            foreach ($pairs as $key => $value)
             {
                 $this
                     ->_getRedisInstance()
-                    ->pipelineAddQueueItem($this->_getListPushMultiQuery($listKey, [$listValue]));
+                    ->pipelineAddQueueItem($this->_getPushMultiQuery($key, [$value]));
             }
 
             $response = $this
                 ->_getRedisInstance()
                 ->pipelineExecute();
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -210,27 +219,28 @@
         // ##########################################
 
         /**
-         * @param $listPairs
+         * @param $pairs
+         *
          * @return array|bool
          */
-        public function listMultiPushValuesMulti($listPairs)
+        public function multiListPushValueMulti($pairs)
         {
             $this
                 ->_getRedisInstance()
                 ->pipelineEnable(TRUE);
 
-            foreach($listPairs as $listKey => $listValues)
+            foreach ($pairs as $key => $values)
             {
                 $this
                     ->_getRedisInstance()
-                    ->pipelineAddQueueItem($this->_getListPushMultiQuery($listKey, $listValues));
+                    ->pipelineAddQueueItem($this->_getPushMultiQuery($key, $values));
             }
 
             $response = $this
                 ->_getRedisInstance()
                 ->pipelineExecute();
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -242,9 +252,10 @@
 
         /**
          * @param $key
+         *
          * @return array
          */
-        protected function _getListShiftQuery($key)
+        protected function _getShiftQuery($key)
         {
             return ['LPOP', $key];
         }
@@ -253,15 +264,16 @@
 
         /**
          * @param $key
+         *
          * @return bool|mixed
          */
-        public function listShift($key)
+        public function shift($key)
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getListShiftQuery($key));
+                ->query($this->_getShiftQuery($key));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -273,9 +285,10 @@
 
         /**
          * @param $key
+         *
          * @return array
          */
-        protected function _getListPopQuery($key)
+        protected function _getPopQuery($key)
         {
             return ['RPOP', $key];
         }
@@ -284,15 +297,16 @@
 
         /**
          * @param $key
+         *
          * @return bool|mixed
          */
-        public function listPop($key)
+        public function pop($key)
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getListPopQuery($key));
+                ->query($this->_getPopQuery($key));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -306,9 +320,10 @@
          * @param $key
          * @param $indexStart
          * @param $indexEnd
+         *
          * @return array
          */
-        protected function _getListGetValuesByRangeQuery($key, $indexStart, $indexEnd)
+        protected function _getValuesByRangeQuery($key, $indexStart, $indexEnd)
         {
             return ['LRANGE', $key, (string)$indexStart, (string)$indexEnd];
         }
@@ -319,17 +334,18 @@
          * @param $key
          * @param $indexStart
          * @param $limit
+         *
          * @return bool|mixed
          */
-        public function listGetDataByRange($key, $indexStart, $limit)
+        public function getValuesByRange($key, $indexStart, $limit)
         {
             $limit = $this->_calcRangeLimit($indexStart, $limit);
 
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getListGetValuesByRangeQuery($key, $indexStart, $limit));
+                ->query($this->_getValuesByRangeQuery($key, $indexStart, $limit));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -343,28 +359,29 @@
          * @param array $keys
          * @param $indexStart
          * @param $limit
+         *
          * @return array|bool
          */
-        public function listMultiGetDataByRange(array $keys, $indexStart, $limit)
+        public function getMultiListValuesByRange(array $keys, $indexStart, $limit)
         {
             $this
                 ->_getRedisInstance()
                 ->pipelineEnable(TRUE);
 
-            foreach($keys as $key)
+            foreach ($keys as $key)
             {
                 $limit = $this->_calcRangeLimit($indexStart, $limit);
 
                 $this
                     ->_getRedisInstance()
-                    ->pipelineAddQueueItem($this->_getListGetValuesByRangeQuery($key, $indexStart, $limit));
+                    ->pipelineAddQueueItem($this->_getValuesByRangeQuery($key, $indexStart, $limit));
             }
 
             $response = $this
                 ->_getRedisInstance()
                 ->pipelineExecute();
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -376,15 +393,16 @@
 
         /**
          * @param $key
+         *
          * @return bool|mixed
          */
-        public function listGetData($key)
+        public function getValues($key)
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getListGetValuesByRangeQuery($key, 0, - 1));
+                ->query($this->_getValuesByRangeQuery($key, 0, -1));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -396,26 +414,27 @@
 
         /**
          * @param array $keys
+         *
          * @return array|bool
          */
-        public function listMultiGetData(array $keys)
+        public function getMultiListValues(array $keys)
         {
             $this
                 ->_getRedisInstance()
                 ->pipelineEnable(TRUE);
 
-            foreach($keys as $key)
+            foreach ($keys as $key)
             {
                 $this
                     ->_getRedisInstance()
-                    ->pipelineAddQueueItem($this->_getListGetValuesByRangeQuery($key, 0, - 1));
+                    ->pipelineAddQueueItem($this->_getValuesByRangeQuery($key, 0, -1));
             }
 
             $response = $this
                 ->_getRedisInstance()
                 ->pipelineExecute();
 
-            if(empty($response['errors']))
+            if (empty($response['errors']))
             {
                 return TRUE;
             }
@@ -427,9 +446,10 @@
 
         /**
          * @param $key
+         *
          * @return array
          */
-        protected function _getListGetCountQuery($key)
+        protected function _getCountQuery($key)
         {
             return ['LLEN', $key];
         }
@@ -438,15 +458,16 @@
 
         /**
          * @param $key
+         *
          * @return bool|mixed
          */
-        public function listGetCount($key)
+        public function getCount($key)
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getListGetCountQuery($key));
+                ->query($this->_getCountQuery($key));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -460,9 +481,10 @@
          * @param $key
          * @param $index
          * @param $value
+         *
          * @return array
          */
-        protected function _getListSetAtIndexQuery($key, $index, $value)
+        protected function _getSetAtIndexQuery($key, $index, $value)
         {
             return ['LSET', $key, $index, $value];
         }
@@ -473,15 +495,16 @@
          * @param $key
          * @param $index
          * @param $value
+         *
          * @return bool|mixed
          */
-        public function listSetAtIndex($key, $index, $value)
+        public function setAtIndex($key, $index, $value)
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getListSetAtIndexQuery($key, $index, $value));
+                ->query($this->_getSetAtIndexQuery($key, $index, $value));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -494,9 +517,10 @@
         /**
          * @param $key
          * @param $index
+         *
          * @return array
          */
-        protected function _getListGetByIndexQuery($key, $index)
+        protected function _getByIndexQuery($key, $index)
         {
             return ['LINDEX', $key, $index];
         }
@@ -506,15 +530,16 @@
         /**
          * @param $key
          * @param $index
+         *
          * @return bool|mixed
          */
-        public function listGetByIndex($key, $index)
+        public function getByIndex($key, $index)
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getListGetByIndexQuery($key, $index));
+                ->query($this->_getByIndexQuery($key, $index));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -528,9 +553,10 @@
          * @param $key
          * @param $index
          * @param $value
+         *
          * @return array
          */
-        protected function _getListTrimQuery($key, $index, $value)
+        protected function _getTrimQuery($key, $index, $value)
         {
             return ['LTRIM', $key, $index, $value];
         }
@@ -541,55 +567,16 @@
          * @param $key
          * @param $index
          * @param $value
+         *
          * @return bool|mixed
          */
-        public function listTrim($key, $index, $value)
+        public function trim($key, $index, $value)
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getListTrimQuery($key, $index, $value));
+                ->query($this->_getTrimQuery($key, $index, $value));
 
-            if($response != FALSE)
-            {
-                return $response;
-            }
-
-            return FALSE;
-        }
-
-        // ##########################################
-
-        /**
-         * @param $key
-         * @return bool|mixed
-         */
-        public function listDelete($key)
-        {
-            $response = $this
-                ->_getRedisInstance()
-                ->keyDelete($key);
-
-            if($response != FALSE)
-            {
-                return $response;
-            }
-
-            return FALSE;
-        }
-
-        // ##########################################
-
-        /**
-         * @param array $keys
-         * @return bool|mixed
-         */
-        public function listDeleteMulti(array $keys)
-        {
-            $response = $this
-                ->_getRedisInstance()
-                ->keyDeleteMulti($keys);
-
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }

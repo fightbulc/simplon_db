@@ -12,11 +12,12 @@
          * @param $key
          * @param $value
          * @param $expire
+         *
          * @return array
          */
-        protected function _getStringSetQuery($key, $value, $expire = -1)
+        protected function _getSetQuery($key, $value, $expire = -1)
         {
-            if($expire > 0)
+            if ($expire > 0)
             {
                 return ['SETEX', $key, (string)$expire, $value];
             }
@@ -30,15 +31,16 @@
          * @param $key
          * @param $value
          * @param $expire
+         *
          * @return bool|mixed
          */
-        public function stringSet($key, $value, $expire = -1)
+        public function setValue($key, $value, $expire = -1)
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getStringSetQuery($key, $value, $expire));
+                ->query($this->_getSetQuery($key, $value, $expire));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -51,26 +53,27 @@
         /**
          * @param array $pairs
          * @param $expire
+         *
          * @return bool
          */
-        public function stringSetMulti(array $pairs, $expire = -1)
+        public function setMulti(array $pairs, $expire = -1)
         {
             $this
                 ->_getRedisInstance()
                 ->pipelineEnable(TRUE);
 
-            foreach($pairs as $key => $value)
+            foreach ($pairs as $key => $value)
             {
                 $this
                     ->_getRedisInstance()
-                    ->pipelineAddQueueItem($this->_getStringSetQuery($key, $value, $expire));
+                    ->pipelineAddQueueItem($this->_getSetQuery($key, $value, $expire));
             }
 
             $response = $this
                 ->_getRedisInstance()
                 ->pipelineExecute();
 
-            if(empty($response['errors']))
+            if (empty($response['errors']))
             {
                 return TRUE;
             }
@@ -82,9 +85,10 @@
 
         /**
          * @param $key
-         * @return string
+         *
+         * @return array
          */
-        protected function _getStringGetQuery($key)
+        protected function _getValueQuery($key)
         {
             return array('GET', $key);
         }
@@ -93,15 +97,16 @@
 
         /**
          * @param $key
+         *
          * @return bool|mixed
          */
-        public function stringGetData($key)
+        public function getValue($key)
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getStringGetQuery($key));
+                ->query($this->_getValueQuery($key));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -113,9 +118,10 @@
 
         /**
          * @param array $keys
+         *
          * @return array
          */
-        protected function _getStringGetMultiQuery(array $keys)
+        protected function _getValueMultiQuery(array $keys)
         {
             return array_merge(['MGET'], $keys);
         }
@@ -124,55 +130,16 @@
 
         /**
          * @param array $keys
+         *
          * @return bool|mixed
          */
-        public function stringGetDataMulti(array $keys)
+        public function getValueMulti(array $keys)
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getStringGetMultiQuery($keys));
+                ->query($this->_getValueMultiQuery($keys));
 
-            if($response != FALSE)
-            {
-                return $response;
-            }
-
-            return FALSE;
-        }
-
-        // ##########################################
-
-        /**
-         * @param $key
-         * @return bool|mixed
-         */
-        public function stringDelete($key)
-        {
-            $response = $this
-                ->_getRedisInstance()
-                ->keyDelete($key);
-
-            if($response != FALSE)
-            {
-                return $response;
-            }
-
-            return FALSE;
-        }
-
-        // ##########################################
-
-        /**
-         * @param array $keys
-         * @return bool|mixed
-         */
-        public function stringDeleteMulti(array $keys)
-        {
-            $response = $this
-                ->_getRedisInstance()
-                ->keyDeleteMulti($keys);
-
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }

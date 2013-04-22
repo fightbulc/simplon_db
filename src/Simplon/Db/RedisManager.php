@@ -16,22 +16,22 @@
         private $_redisInstance;
 
         /** @var RedisBitCommands */
-        private $_redisBitCommandsInstance;
+        private $_bitCommandsInstance;
 
         /** @var RedisHashCommands */
-        private $_redisHashCommandsInstance;
+        private $_hashCommandsInstance;
 
         /** @var RedisListCommands */
-        private $_redisListCommandsInstance;
+        private $_listCommandsInstance;
 
         /** @var RedisSetCommands */
-        private $_redisSetCommandsInstance;
+        private $_setCommandsInstance;
 
         /** @var RedisSortedSetCommands */
-        private $_redisSortedSetCommandsInstance;
+        private $_sortedSetCommandsInstance;
 
         /** @var RedisStringCommands */
-        private $_redisStringCommandsInstance;
+        private $_stringCommandsInstance;
 
         // ######################################
 
@@ -58,14 +58,14 @@
         /**
          * @return RedisBitCommands
          */
-        public function getRedisBitCommandsInstance()
+        public function getBitCommandsInstance()
         {
-            if(! $this->_redisBitCommandsInstance)
+            if (!$this->_bitCommandsInstance)
             {
-                $this->_redisBitCommandsInstance = new RedisBitCommands($this->getRedisInstance());
+                $this->_bitCommandsInstance = new RedisBitCommands($this->getRedisInstance());
             }
 
-            return $this->_redisBitCommandsInstance;
+            return $this->_bitCommandsInstance;
         }
 
         // ######################################
@@ -73,14 +73,14 @@
         /**
          * @return RedisHashCommands
          */
-        public function getRedisHashCommandsInstance()
+        public function getHashCommandsInstance()
         {
-            if(! $this->_redisHashCommandsInstance)
+            if (!$this->_hashCommandsInstance)
             {
-                $this->_redisHashCommandsInstance = new RedisHashCommands($this->getRedisInstance());
+                $this->_hashCommandsInstance = new RedisHashCommands($this->getRedisInstance());
             }
 
-            return $this->_redisHashCommandsInstance;
+            return $this->_hashCommandsInstance;
         }
 
         // ######################################
@@ -88,14 +88,14 @@
         /**
          * @return RedisListCommands
          */
-        public function getRedisListCommandsInstance()
+        public function getListCommandsInstance()
         {
-            if(! $this->_redisListCommandsInstance)
+            if (!$this->_listCommandsInstance)
             {
-                $this->_redisListCommandsInstance = new RedisListCommands($this->getRedisInstance());
+                $this->_listCommandsInstance = new RedisListCommands($this->getRedisInstance());
             }
 
-            return $this->_redisListCommandsInstance;
+            return $this->_listCommandsInstance;
         }
 
         // ######################################
@@ -103,14 +103,14 @@
         /**
          * @return RedisSetCommands
          */
-        public function getRedisSetCommandsInstance()
+        public function getSetCommandsInstance()
         {
-            if(! $this->_redisSetCommandsInstance)
+            if (!$this->_setCommandsInstance)
             {
-                $this->_redisSetCommandsInstance = new RedisSetCommands($this->getRedisInstance());
+                $this->_setCommandsInstance = new RedisSetCommands($this->getRedisInstance());
             }
 
-            return $this->_redisSetCommandsInstance;
+            return $this->_setCommandsInstance;
         }
 
         // ######################################
@@ -118,14 +118,14 @@
         /**
          * @return RedisSortedSetCommands
          */
-        public function getRedisSortedSetCommandsInstance()
+        public function getSortedSetCommandsInstance()
         {
-            if(! $this->_redisSortedSetCommandsInstance)
+            if (!$this->_sortedSetCommandsInstance)
             {
-                $this->_redisSortedSetCommandsInstance = new RedisSortedSetCommands($this->getRedisInstance());
+                $this->_sortedSetCommandsInstance = new RedisSortedSetCommands($this->getRedisInstance());
             }
 
-            return $this->_redisSortedSetCommandsInstance;
+            return $this->_sortedSetCommandsInstance;
         }
 
         // ######################################
@@ -133,13 +133,13 @@
         /**
          * @return RedisStringCommands
          */
-        public function getRedisStringCommandsInstance()
+        public function getStringCommandsInstance()
         {
-            if(! $this->_redisStringCommandsInstance)
+            if (!$this->_stringCommandsInstance)
             {
-                $this->_redisStringCommandsInstance = new RedisStringCommands($this->getRedisInstance());
+                $this->_stringCommandsInstance = new RedisStringCommands($this->getRedisInstance());
             }
 
-            return $this->_redisStringCommandsInstance;
+            return $this->_stringCommandsInstance;
         }
     }
