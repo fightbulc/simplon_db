@@ -168,7 +168,7 @@
          *
          * @return bool|mixed
          */
-        public function delete($key, $value)
+        public function deleteValue($key, $value)
         {
             $response = $this
                 ->_getRedisInstance()
@@ -190,7 +190,7 @@
          *
          * @return bool|mixed
          */
-        public function deleteMulti($key, array $values)
+        public function deleteValueMulti($key, array $values)
         {
             $response = $this
                 ->_getRedisInstance()
