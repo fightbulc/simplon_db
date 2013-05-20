@@ -33,6 +33,7 @@
 
         /**
          * @param CouchQueryBuilder $couchQuery
+         *
          * @return bool|mixed
          */
         public function fetch(CouchQueryBuilder $couchQuery)
@@ -41,7 +42,7 @@
                 ->_getCouchbaseInstance()
                 ->fetch($couchQuery->getId());
 
-            if($result !== FALSE)
+            if ($result !== FALSE)
             {
                 return $result;
             }
@@ -53,6 +54,7 @@
 
         /**
          * @param CouchQueryBuilder $couchQuery
+         *
          * @return bool|array
          */
         public function fetchMulti(CouchQueryBuilder $couchQuery)
@@ -61,7 +63,7 @@
                 ->_getCouchbaseInstance()
                 ->fetchMulti($couchQuery->getIdsMany());
 
-            if($result !== FALSE)
+            if ($result !== FALSE)
             {
                 return $result;
             }
@@ -73,6 +75,7 @@
 
         /**
          * @param CouchQueryBuilder $couchQuery
+         *
          * @return bool|string
          */
         public function set(CouchQueryBuilder $couchQuery)
@@ -81,7 +84,7 @@
                 ->_getCouchbaseInstance()
                 ->set($couchQuery->getId(), $couchQuery->getData(), $couchQuery->getExpirationInSeconds());
 
-            if(! empty($binaryObjectId))
+            if (!empty($binaryObjectId))
             {
                 return (string)$binaryObjectId;
             }
@@ -93,6 +96,7 @@
 
         /**
          * @param CouchQueryBuilder $couchQuery
+         *
          * @return mixed
          */
         public function setMulti(CouchQueryBuilder $couchQuery)
@@ -106,6 +110,7 @@
 
         /**
          * @param CouchQueryBuilder $couchQuery
+         *
          * @return mixed
          */
         public function delete(CouchQueryBuilder $couchQuery)
@@ -119,11 +124,12 @@
 
         /**
          * @param CouchQueryBuilder $couchQuery
+         *
          * @return bool
          */
         public function flushBucket(CouchQueryBuilder $couchQuery)
         {
-            if($couchQuery->getFlushConfirmation())
+            if ($couchQuery->getFlushConfirmation())
             {
                 return $this
                     ->_getCouchbaseInstance()
@@ -137,6 +143,7 @@
 
         /**
          * @param CouchQueryBuilder $couchQuery
+         *
          * @return mixed
          */
         public function getView(CouchQueryBuilder $couchQuery)

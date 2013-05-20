@@ -35,6 +35,7 @@
 
         /**
          * @param $data
+         *
          * @return string
          */
         protected function _jsonEncode($data)
@@ -46,6 +47,7 @@
 
         /**
          * @param $json
+         *
          * @return mixed
          */
         protected function _jsonDecodeAsArray($json)
@@ -57,6 +59,7 @@
 
         /**
          * @param $cacheId
+         *
          * @return bool|mixed
          */
         public function fetch($cacheId)
@@ -65,7 +68,7 @@
                 ->_getCouchbaseInstance()
                 ->get($cacheId);
 
-            if(! empty($jsonData))
+            if (!empty($jsonData))
             {
                 return $this->_jsonDecodeAsArray($jsonData);
             }
@@ -77,6 +80,7 @@
 
         /**
          * @param $cacheIds
+         *
          * @return bool|mixed
          */
         public function fetchMulti($cacheIds)
@@ -85,7 +89,7 @@
                 ->_getCouchbaseInstance()
                 ->getMulti($cacheIds);
 
-            if(! empty($jsonData))
+            if (!empty($jsonData))
             {
                 return $this->_jsonDecodeAsArray($jsonData);
             }
@@ -99,6 +103,7 @@
          * @param $cacheId
          * @param $data
          * @param int $expireSeconds
+         *
          * @return mixed
          */
         public function set($cacheId, $data, $expireSeconds = 0)
@@ -136,7 +141,7 @@
         {
             $jsonData = array();
 
-            foreach($data as $key => $val)
+            foreach ($data as $key => $val)
             {
                 $jsonData[$key] = $this->_jsonEncode($val);
             }
@@ -151,6 +156,7 @@
         /**
          * @param string $cacheId
          * @param int $expireSeconds
+         *
          * @return bool
          */
         public function keepKeyAlive($cacheId, $expireSeconds = 0)
@@ -164,6 +170,7 @@
 
         /**
          * @param $cacheId
+         *
          * @return mixed
          */
         public function delete($cacheId)
@@ -184,7 +191,7 @@
                 ->_getCouchbaseInstance()
                 ->flush();
 
-            if($result !== FALSE)
+            if ($result !== FALSE)
             {
                 return TRUE;
             }
@@ -198,6 +205,7 @@
          * @param $designDocName
          * @param $viewName
          * @param array $filterOptions
+         *
          * @return mixed
          */
         public function getView($designDocName, $viewName, $filterOptions = array())

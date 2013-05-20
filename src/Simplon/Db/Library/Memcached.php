@@ -39,7 +39,7 @@
             $this->_instance->setOption(\Memcached::OPT_TCP_NODELAY, TRUE);
             $this->_instance->setOption(\Memcached::OPT_NO_BLOCK, TRUE);
 
-            if(! count($this->_instance->getServerList()))
+            if (!count($this->_instance->getServerList()))
             {
                 $this->_instance->addServer($server, $port);
             }
@@ -49,6 +49,7 @@
 
         /**
          * @param $data
+         *
          * @return string
          */
         protected function _jsonEncode($data)
@@ -60,6 +61,7 @@
 
         /**
          * @param $json
+         *
          * @return mixed
          */
         protected function _jsonDecodeAsArray($json)
@@ -71,6 +73,7 @@
 
         /**
          * @param string $cacheId
+         *
          * @return array
          */
         public function get($cacheId)
@@ -79,7 +82,7 @@
                 ->getInstance()
                 ->get($cacheId);
 
-            if(empty($jsonData))
+            if (empty($jsonData))
             {
                 return FALSE;
             }
@@ -91,6 +94,7 @@
 
         /**
          * @param array $cacheIds
+         *
          * @return array
          */
         public function getMulti(array $cacheIds)
@@ -108,6 +112,7 @@
          * @param $cacheId
          * @param $data
          * @param int $expireSeconds
+         *
          * @return mixed
          */
         public function set($cacheId, $data, $expireSeconds = 0)
@@ -129,7 +134,7 @@
         {
             $jsonData = array();
 
-            foreach($data as $key => $val)
+            foreach ($data as $key => $val)
             {
                 $jsonData[$key] = $this->_jsonEncode($val);
             }
@@ -143,6 +148,7 @@
 
         /**
          * @param $cacheId
+         *
          * @return mixed
          */
         public function delete($cacheId)
@@ -156,6 +162,7 @@
 
         /**
          * @param int $delayInSeconds
+         *
          * @return bool
          */
         public function flush($delayInSeconds = 0)

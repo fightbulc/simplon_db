@@ -71,6 +71,7 @@
         /**
          * @param $indexStart
          * @param $limit
+         *
          * @return mixed
          */
         protected function _calcRangeLimit($indexStart, $limit)

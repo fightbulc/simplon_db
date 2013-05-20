@@ -33,7 +33,7 @@
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getSetKeyValueQuery($hashId, $keyId, (string)$value));
+                ->query($this->_getSetKeyValueQuery($hashId, $keyId, $value));
 
             if ($response != FALSE)
             {
@@ -58,7 +58,7 @@
             foreach ($pairs as $keyId => $value)
             {
                 $flat[] = $keyId;
-                $flat[] = (string)$value;
+                $flat[] = $value;
             }
 
             return array_merge(['HMSET'], [$hashId], $flat);
@@ -78,7 +78,7 @@
         {
             if ($seconds > 0)
             {
-                return ['EXPIRE', $hashId, (string)$seconds];
+                return ['EXPIRE', $hashId, $seconds];
             }
 
             return FALSE;

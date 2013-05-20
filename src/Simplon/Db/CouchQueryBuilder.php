@@ -49,6 +49,7 @@
         /**
          * @param $id
          * @param $idTemplate
+         *
          * @return mixed
          */
         protected function _parseIdTemplate($id, $idTemplate)
@@ -60,6 +61,7 @@
 
         /**
          * @param $idTemplate
+         *
          * @return CouchQueryBuilder
          */
         public function setIdTemplate($idTemplate)
@@ -73,6 +75,7 @@
 
         /**
          * @param $id
+         *
          * @return CouchQueryBuilder
          */
         public function setId($id)
@@ -96,6 +99,7 @@
 
         /**
          * @param array $idsMany
+         *
          * @return CouchQueryBuilder
          */
         public function setIdsMany(array $idsMany)
@@ -114,7 +118,7 @@
         {
             $_idsMany = array();
 
-            foreach($this->_idsMany as $id)
+            foreach ($this->_idsMany as $id)
             {
                 $_idsMany[] = $this->_parseIdTemplate($id, $this->_idTemplate);
             }
@@ -126,6 +130,7 @@
 
         /**
          * @param $data
+         *
          * @return CouchQueryBuilder
          */
         public function setData($data)
@@ -149,6 +154,7 @@
 
         /**
          * @param $dataMany
+         *
          * @return CouchQueryBuilder
          */
         public function setDataMany($dataMany)
@@ -172,6 +178,7 @@
 
         /**
          * @param $expirationInSeconds
+         *
          * @return CouchQueryBuilder
          */
         public function setExpirationInSeconds($expirationInSeconds)
@@ -195,6 +202,7 @@
 
         /**
          * @param $use
+         *
          * @return CouchQueryBuilder
          */
         public function setFlushConfirmation($use)
@@ -218,6 +226,7 @@
 
         /**
          * @param $name
+         *
          * @return CouchQueryBuilder
          */
         public function setViewDocName($name)
@@ -241,6 +250,7 @@
 
         /**
          * @param $id
+         *
          * @return CouchQueryBuilder
          */
         public function setViewId($id)
@@ -264,6 +274,7 @@
 
         /**
          * @param array $filter
+         *
          * @return CouchQueryBuilder
          */
         public function setViewFilter(array $filter)

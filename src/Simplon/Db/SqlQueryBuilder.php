@@ -26,6 +26,7 @@
 
         /**
          * @param $conditions array
+         *
          * @return SqlQueryBuilder
          */
         public function setConditions($conditions)
@@ -39,11 +40,12 @@
 
         /**
          * @param $condition
+         *
          * @return bool
          */
         public function removeCondition($condition)
         {
-            if(! isset($this->conditions[$condition]))
+            if (!isset($this->conditions[$condition]))
             {
                 return FALSE;
             }
@@ -77,6 +79,7 @@
 
         /**
          * @param $query string
+         *
          * @return SqlQueryBuilder
          */
         public function setQuery($query)
@@ -101,6 +104,7 @@
 
         /**
          * @param $query
+         *
          * @return SqlQueryBuilder
          */
         protected function _setPreparedQuery($query)
@@ -117,9 +121,9 @@
          */
         protected function _getPreparedQuery()
         {
-            foreach($this->conditions as $key => $val)
+            foreach ($this->conditions as $key => $val)
             {
-                if(strpos($this->preparedQuery, '_' . $key . '_') !== FALSE)
+                if (strpos($this->preparedQuery, '_' . $key . '_') !== FALSE)
                 {
                     $this->preparedQuery = str_replace('_' . $key . '_', $val, $this->preparedQuery);
                     $this->removeCondition($key);
@@ -133,6 +137,7 @@
 
         /**
          * @param array $data
+         *
          * @return SqlQueryBuilder
          */
         public function setData($data)
@@ -156,6 +161,7 @@
 
         /**
          * @param $tableName string
+         *
          * @return SqlQueryBuilder
          */
         public function setTableName($tableName)
@@ -179,6 +185,7 @@
 
         /**
          * @param $insertIgnore
+         *
          * @return SqlQueryBuilder
          */
         public function setInsertIgnore($insertIgnore)

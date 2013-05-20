@@ -19,7 +19,7 @@
         {
             if ($expire > 0)
             {
-                return ['SETEX', $key, (string)$expire, $value];
+                return ['SETEX', $key, $expire, $value];
             }
 
             return ['SET', $key, $value];

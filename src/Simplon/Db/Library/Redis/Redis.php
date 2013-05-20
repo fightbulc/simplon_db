@@ -23,6 +23,7 @@
          * @param $dbId
          * @param int $port
          * @param null $password
+         *
          * @throws \Exception
          */
         public function __construct($host, $dbId, $port = 6379, $password = NULL)
@@ -34,9 +35,9 @@
             $this->dbSelect($dbId);
 
             // auth
-            if(! is_null($password))
+            if (!is_null($password))
             {
-                if($this->dbAuth($password) != 'OK')
+                if ($this->dbAuth($password) != 'OK')
                 {
                     throw new \Exception('DB: authentication failed.', 401);
                 }
@@ -56,27 +57,42 @@
         // ##########################################
 
         /**
-         * @param $commandArgs
+         * @param $cmdArgs
+         *
+         * @return mixed
+         */
+        protected function _ensureStringCommands($cmdArgs)
+        {
+            foreach ($cmdArgs as $index => $command)
+            {
+                $cmdArgs[$index] = strval($command);
+            }
+
+            return $cmdArgs;
+        }
+
+        // ##########################################
+
+        /**
+         * @param $cmdArgs
+         *
          * @return bool|mixed
          */
-        public function query($commandArgs)
+        public function query($cmdArgs)
         {
             // no connection || no commands?
-            if($this->_getRedisInstance() === FALSE || $commandArgs === FALSE)
+            if ($this->_getRedisInstance() === FALSE || $cmdArgs === FALSE)
             {
                 return FALSE;
             }
 
             // force strings only
-            foreach($commandArgs as $index => $command)
-            {
-                $commandArgs[$index] = (string)$command;
-            }
+            $cmdArgs = $this->_ensureStringCommands($cmdArgs);
 
             // query redis
-            $response = phpiredis_command_bs($this->_getRedisInstance(), $commandArgs);
+            $response = phpiredis_command_bs($this->_getRedisInstance(), $cmdArgs);
 
-            if(is_array($response) || substr($response, 0, 2) !== 'ERR')
+            if (is_array($response) || substr($response, 0, 2) !== 'ERR')
             {
                 return $response;
             }
@@ -88,6 +104,7 @@
 
         /**
          * @param bool $use
+         *
          * @return $this
          */
         public function pipelineEnable($use = TRUE)
@@ -105,7 +122,7 @@
         public function pipelineExecute()
         {
             // no connection?
-            if($this->_getRedisInstance() === FALSE)
+            if ($this->_getRedisInstance() === FALSE)
             {
                 return FALSE;
             }
@@ -121,11 +138,11 @@
             $responsesMulti = phpiredis_multi_command_bs($this->_getRedisInstance(), $_pipeline);
 
             // build request/response array
-            foreach($responsesMulti as $index => $response)
+            foreach ($responsesMulti as $index => $response)
             {
                 $_requestKey = json_encode($_pipeline[$index]);
 
-                if(is_array($response) || substr($response, 0, 3) !== 'ERR')
+                if (is_array($response) || substr($response, 0, 3) !== 'ERR')
                 {
                     $requestResponsesMulti['responses'][$_requestKey] = $response;
                     continue;
@@ -167,12 +184,16 @@
 
         /**
          * @param $cmdArgs
+         *
          * @return $this
          */
         public function pipelineAddQueueItem($cmdArgs)
         {
-            if($cmdArgs !== FALSE)
+            if ($cmdArgs !== FALSE)
             {
+                // force strings only
+                $cmdArgs = $this->_ensureStringCommands($cmdArgs);
+
                 $this->_pipelineQueue[] = $cmdArgs;
             }
 
@@ -196,6 +217,7 @@
 
         /**
          * @param $dbId
+         *
          * @return array
          */
         protected function _getDbSelectQuery($dbId)
@@ -207,13 +229,14 @@
 
         /**
          * @param $dbId
+         *
          * @return bool|mixed
          */
         public function dbSelect($dbId)
         {
             $response = $this->query($this->_getDbSelectQuery($dbId));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -225,6 +248,7 @@
 
         /**
          * @param $password
+         *
          * @return array
          */
         protected function _getDbAuthQuery($password)
@@ -236,13 +260,14 @@
 
         /**
          * @param $password
+         *
          * @return bool|mixed
          */
         public function dbAuth($password)
         {
             $response = $this->query($this->_getDbAuthQuery($password));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -264,15 +289,16 @@
 
         /**
          * @param bool $confirm
+         *
          * @return bool|mixed
          */
         public function dbFlush($confirm = FALSE)
         {
-            if($confirm === TRUE)
+            if ($confirm === TRUE)
             {
                 $response = $this->query($this->_getDbFlushQuery());
 
-                if($response != FALSE)
+                if ($response != FALSE)
                 {
                     return $response;
                 }
@@ -285,6 +311,7 @@
 
         /**
          * @param array $keys
+         *
          * @return array
          */
         protected function _getKeyDeleteMultiQuery(array $keys)
@@ -296,13 +323,14 @@
 
         /**
          * @param $key
+         *
          * @return bool|mixed
          */
         public function keyDelete($key)
         {
             $response = $this->query($this->_getKeyDeleteMultiQuery([$key]));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -314,13 +342,14 @@
 
         /**
          * @param array $keys
+         *
          * @return bool|mixed
          */
         public function keyDeleteMulti(array $keys)
         {
             $response = $this->query($this->_getKeyDeleteMultiQuery($keys));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -333,11 +362,12 @@
         /**
          * @param $key
          * @param $seconds
+         *
          * @return array|bool
          */
         protected function _getKeySetExpireQuery($key, $seconds = -1)
         {
-            if($seconds > 0)
+            if ($seconds > 0)
             {
                 return ['EXPIRE', $key, (string)$seconds];
             }
@@ -350,13 +380,14 @@
         /**
          * @param $key
          * @param $seconds
+         *
          * @return bool|mixed
          */
         public function keySetExpire($key, $seconds = -1)
         {
             $response = $this->query($this->_getKeySetExpireQuery($key, $seconds));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -369,22 +400,23 @@
         /**
          * @param array $keys
          * @param $seconds
+         *
          * @return array|bool
          */
         public function keySetExpireMulti(array $keys, $seconds = -1)
         {
-            if($seconds > 0)
+            if ($seconds > 0)
             {
                 $this->pipelineEnable(TRUE);
 
-                foreach($keys as $key)
+                foreach ($keys as $key)
                 {
                     $this->pipelineAddQueueItem($this->_getKeySetExpireQuery($key, $seconds));
                 }
 
                 $response = $this->pipelineExecute();
 
-                if($response != FALSE)
+                if ($response != FALSE)
                 {
                     return $response;
                 }
@@ -412,7 +444,7 @@
         {
             $response = $this->query($this->_getKeysGetCount());
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -424,6 +456,7 @@
 
         /**
          * @param $pattern
+         *
          * @return array
          */
         protected function _getKeysGetByPatternQuery($pattern)
@@ -435,13 +468,14 @@
 
         /**
          * @param $pattern
+         *
          * @return bool|mixed
          */
         public function keysGetByPattern($pattern)
         {
             $response = $this->query($this->_getKeysGetByPatternQuery($pattern));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -453,6 +487,7 @@
 
         /**
          * @param $key
+         *
          * @return array
          */
         protected function _getKeyExistsQuery($key)
@@ -464,15 +499,16 @@
 
         /**
          * @param $key
+         *
          * @return bool|mixed
          */
         public function keyExists($key)
         {
             $response = $this->query($this->_getKeyExistsQuery($key));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
-                return $response;
+                return TRUE;
             }
 
             return FALSE;
@@ -482,6 +518,7 @@
 
         /**
          * @param $key
+         *
          * @return array
          */
         protected function _getKeyGetExpirationQuery($key)
@@ -493,13 +530,14 @@
 
         /**
          * @param $key
+         *
          * @return bool|mixed
          */
         public function keyGetExpiration($key)
         {
             $response = $this->query($this->_getKeyGetExpirationQuery($key));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -511,6 +549,7 @@
 
         /**
          * @param $key
+         *
          * @return array
          */
         protected function _getKeyRenameQuery($key)
@@ -522,13 +561,14 @@
 
         /**
          * @param $key
+         *
          * @return bool|mixed
          */
         public function keyRename($key)
         {
             $response = $this->query($this->_getKeyRenameQuery($key));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -540,6 +580,7 @@
 
         /**
          * @param $key
+         *
          * @return array
          */
         protected function _getKeyRemoveExpirationQuery($key)
@@ -551,13 +592,14 @@
 
         /**
          * @param $key
+         *
          * @return bool|mixed
          */
         public function keyRemoveExpiration($key)
         {
             $response = $this->query($this->_getKeyRemoveExpirationQuery($key));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -569,6 +611,7 @@
 
         /**
          * @param $key
+         *
          * @return array
          */
         protected function _getKeyIncrementQuery($key)
@@ -580,13 +623,14 @@
 
         /**
          * @param $key
+         *
          * @return bool|mixed
          */
         public function keyIncrement($key)
         {
             $response = $this->query($this->_getKeyIncrementQuery($key));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -599,6 +643,7 @@
         /**
          * @param $key
          * @param $value
+         *
          * @return array
          */
         protected function _getKeyIncrementByQuery($key, $value = 1)
@@ -611,13 +656,14 @@
         /**
          * @param $key
          * @param int $value
+         *
          * @return bool|mixed
          */
         public function keyIncrementBy($key, $value = 1)
         {
             $response = $this->query($this->_getKeyIncrementByQuery($key, $value));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -629,6 +675,7 @@
 
         /**
          * @param $key
+         *
          * @return array
          */
         protected function _getKeyDecrementQuery($key)
@@ -640,13 +687,14 @@
 
         /**
          * @param $key
+         *
          * @return bool|mixed
          */
         public function keyDecrement($key)
         {
             $response = $this->query($this->_getKeyDecrementQuery($key));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }
@@ -659,6 +707,7 @@
         /**
          * @param $key
          * @param $value
+         *
          * @return array
          */
         protected function _getKeyDecrementByQuery($key, $value = 1)
@@ -671,13 +720,14 @@
         /**
          * @param $key
          * @param int $value
+         *
          * @return bool|mixed
          */
         public function keyDecrementBy($key, $value = 1)
         {
             $response = $this->query($this->_getKeyDecrementByQuery($key, $value));
 
-            if($response != FALSE)
+            if ($response != FALSE)
             {
                 return $response;
             }

@@ -15,6 +15,7 @@
 
         /**
          * @param $value
+         *
          * @return UserCouchDao
          */
         public function setId($value)
@@ -31,6 +32,7 @@
 
         /**
          * @param $value
+         *
          * @return UserCouchDao
          */
         public function setUsername($value)
@@ -47,6 +49,7 @@
 
         /**
          * @param $value
+         *
          * @return UserCouchDao
          */
         public function setCreated($value)
@@ -63,6 +66,7 @@
 
         /**
          * @param $value
+         *
          * @return UserCouchDao
          */
         public function setUpdated($value)
@@ -91,7 +95,7 @@
     echo '</pre>';
 
     // create
-    if($result === FALSE)
+    if ($result === FALSE)
     {
         $userCouchDao
             ->setId('tino')
@@ -113,7 +117,7 @@
         var_dump($userCouchDao->export());
     }
 
-    if(array_key_exists('delete', $_GET))
+    if (array_key_exists('delete', $_GET))
     {
         $userCouchDao->delete();
         echo "<hr>DELETED";

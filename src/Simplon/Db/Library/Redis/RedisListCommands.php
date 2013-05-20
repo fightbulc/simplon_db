@@ -325,7 +325,7 @@
          */
         protected function _getValuesByRangeQuery($key, $indexStart, $indexEnd)
         {
-            return ['LRANGE', $key, (string)$indexStart, (string)$indexEnd];
+            return ['LRANGE', $key, $indexStart, $indexEnd];
         }
 
         // ##########################################

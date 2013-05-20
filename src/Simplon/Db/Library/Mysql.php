@@ -15,15 +15,17 @@
 
         /**
          * @static
+         *
          * @param $server
          * @param $database
          * @param $username
          * @param $password
+         *
          * @return \EasyPDO
          */
         public static function Instance($server, $database, $username, $password)
         {
-            if(! \EasyPDO::$Instance)
+            if (!\EasyPDO::$Instance)
             {
                 $connectionString = 'mysql:host=' . $server . ';dbname=' . $database;
                 \EasyPDO::$Instance = new Mysql($connectionString, $username, $password);

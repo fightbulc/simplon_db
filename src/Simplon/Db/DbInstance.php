@@ -23,13 +23,14 @@
          * @param $database
          * @param $username
          * @param $password
+         *
          * @return Mysql
          */
         public static function MySQL($server, $database, $username, $password)
         {
             $poolId = $server . ':' . $database . ':' . $username . ':' . $password;
 
-            if(! isset(DbInstance::$_mysqlPool[$poolId]))
+            if (!isset(DbInstance::$_mysqlPool[$poolId]))
             {
                 DbInstance::$_mysqlPool[$poolId] = Mysql::Instance($server, $database, $username, $password);
             }
@@ -44,13 +45,14 @@
          * @param $database
          * @param int $port
          * @param null $password
+         *
          * @return Redis
          */
         public static function Redis($server, $database, $port = 6379, $password = NULL)
         {
             $poolId = $server . ':' . $port . ':' . $database;
 
-            if(! isset(DbInstance::$_mysqlPool[$poolId]))
+            if (!isset(DbInstance::$_mysqlPool[$poolId]))
             {
                 DbInstance::$_redisPool[$poolId] = new Redis($server, $database, $port, $password);
             }
@@ -66,13 +68,14 @@
          * @param $username
          * @param $password
          * @param $bucket
+         *
          * @return Couchbase
          */
         public static function Couchbase($server, $port, $username, $password, $bucket)
         {
             $poolId = $server . ':' . $port . ':' . $username . ':' . $password . ':' . $bucket;
 
-            if(! isset(DbInstance::$_couchbasePool[$poolId]))
+            if (!isset(DbInstance::$_couchbasePool[$poolId]))
             {
                 DbInstance::$_couchbasePool[$poolId] = new Couchbase($server, $port, $username, $password, $bucket);
             }
@@ -88,13 +91,14 @@
          * @param $username
          * @param $password
          * @param $bucket
+         *
          * @return Memcached
          */
         public static function Memcached($server, $port, $username, $password, $bucket)
         {
             $poolId = $server . ':' . $port . ':' . $username . ':' . $password . ':' . $bucket;
 
-            if(! isset(DbInstance::$_memcachedPool[$poolId]))
+            if (!isset(DbInstance::$_memcachedPool[$poolId]))
             {
                 DbInstance::$_memcachedPool[$poolId] = new Memcached($server, $port, $username, $password, $bucket);
             }

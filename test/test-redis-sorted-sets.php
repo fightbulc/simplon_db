@@ -23,11 +23,11 @@
     console('+ Writing <sortedSets> WITHOUT pipeline (runs=' . $runs . ', friends=' . $friends . ')');
     $summary = 0;
 
-    for($t = 1; $t <= $runs; $t ++)
+    for ($t = 1; $t <= $runs; $t++)
     {
         $start = microtime(TRUE);
 
-        for($i = 1; $i <= $friends; $i ++)
+        for ($i = 1; $i <= $friends; $i++)
         {
             $response = $redisManager
                 ->getRedisInstance()
@@ -51,12 +51,12 @@
     console('+ Writing <sortedSets> WITH pipeline (runs=' . $runs . ', friends=' . $friends . ')');
     $summary = 0;
 
-    for($t = 1; $t <= $runs; $t ++)
+    for ($t = 1; $t <= $runs; $t++)
     {
         $start = microtime(TRUE);
         $pairs = [];
 
-        for($i = 1; $i <= $friends; $i ++)
+        for ($i = 1; $i <= $friends; $i++)
         {
             $pairs['zset:pipe:OFF:' . $t . ':' . $i] = [1, '[AID]'];
         }

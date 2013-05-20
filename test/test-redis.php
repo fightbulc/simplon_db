@@ -23,11 +23,11 @@
     console('+ Writing <strings> WITHOUT pipeline (runs=' . $runs . ', sets=' . $sets . ')');
     $summary = 0;
 
-    for($t = 1; $t <= $runs; $t ++)
+    for ($t = 1; $t <= $runs; $t++)
     {
         $start = microtime(TRUE);
 
-        for($i = 0; $i < $sets; $i ++)
+        for ($i = 0; $i < $sets; $i++)
         {
             $response = $redisManager
                 ->getRedisInstance()
@@ -51,12 +51,12 @@
     console('+ Writing <strings> WITH pipeline (runs=' . $runs . ', sets=' . $sets . ')');
     $summary = 0;
 
-    for($t = 1; $t <= $runs; $t ++)
+    for ($t = 1; $t <= $runs; $t++)
     {
         $start = microtime(TRUE);
         $pairs = [];
 
-        for($i = 0; $i < $sets; $i ++)
+        for ($i = 0; $i < $sets; $i++)
         {
             $pairs['string:pipe:ON:' . $t . ':' . $i] = 'hello world ' . $i;
         }
@@ -85,11 +85,11 @@
     console('+ Reading <strings> WITHOUT pipeline (runs=' . $runs . ', sets=' . $sets . ')');
     $summary = 0;
 
-    for($t = 1; $t <= $runs; $t ++)
+    for ($t = 1; $t <= $runs; $t++)
     {
         $start = microtime(TRUE);
 
-        for($i = 0; $i < $sets; $i ++)
+        for ($i = 0; $i < $sets; $i++)
         {
             $response = $redisManager
                 ->getRedisInstance()
@@ -113,12 +113,12 @@
     console('+ Reading <strings> WITH pipeline (runs=' . $runs . ', sets=' . $sets . ')');
     $summary = 0;
 
-    for($t = 1; $t <= $runs; $t ++)
+    for ($t = 1; $t <= $runs; $t++)
     {
         $start = microtime(TRUE);
         $pairs = [];
 
-        for($i = 0; $i < $sets; $i ++)
+        for ($i = 0; $i < $sets; $i++)
         {
             $pairs[] = 'string:pipe:ON:' . $t . ':' . $i;
         }
@@ -149,11 +149,11 @@
     console('+ Writing <lists> WITHOUT pipe (runs=' . $runs . ', sets=' . $sets . ')');
     $summary = 0;
 
-    for($t = 1; $t <= $runs; $t ++)
+    for ($t = 1; $t <= $runs; $t++)
     {
         $start = microtime(TRUE);
 
-        for($i = 0; $i < $sets; $i ++)
+        for ($i = 0; $i < $sets; $i++)
         {
             $response = $redisManager
                 ->getRedisInstance()
@@ -177,12 +177,12 @@
     console('+ Writing <lists> WITH pipe (runs=' . $runs . ', sets=' . $sets . ')');
     $summary = 0;
 
-    for($t = 1; $t <= $runs; $t ++)
+    for ($t = 1; $t <= $runs; $t++)
     {
         $start = microtime(TRUE);
         $pairs = [];
 
-        for($i = 0; $i < $sets; $i ++)
+        for ($i = 0; $i < $sets; $i++)
         {
             $pairs['list:pipe:ON:' . $t . ':' . $i] = 'hello world ' . $i;
         }
@@ -213,11 +213,11 @@
     console('+ Reading <lists> by range WITHOUT pipe (runs=' . $runs . ', sets=' . $sets . ')');
     $summary = 0;
 
-    for($t = 1; $t <= $runs; $t ++)
+    for ($t = 1; $t <= $runs; $t++)
     {
         $start = microtime(TRUE);
 
-        for($i = 0; $i < $sets; $i ++)
+        for ($i = 0; $i < $sets; $i++)
         {
             $response = $redisManager
                 ->getRedisInstance()
@@ -241,12 +241,12 @@
     console('+ Reading <lists> by range WITH pipe (runs=' . $runs . ', sets=' . $sets . ')');
     $summary = 0;
 
-    for($t = 1; $t <= $runs; $t ++)
+    for ($t = 1; $t <= $runs; $t++)
     {
         $start = microtime(TRUE);
         $pairs = [];
 
-        for($i = 0; $i < $sets; $i ++)
+        for ($i = 0; $i < $sets; $i++)
         {
             $pairs[] = 'list:pipe:ON:' . $t . ':' . $i;
         }

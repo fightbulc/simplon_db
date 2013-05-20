@@ -38,10 +38,7 @@
          */
         public function addValue($key, $score, $value)
         {
-            $scoreValuePair = [
-                (string)$score,
-                (string)$value
-            ];
+            $scoreValuePair = [$score, $value];
 
             $response = $this
                 ->_getRedisInstance()
@@ -70,10 +67,7 @@
 
             foreach ($pairs as $key => $setValues)
             {
-                $scoreValuePair = [
-                    (string)$setValues[0],
-                    (string)$setValues[1]
-                ];
+                $scoreValuePair = [$setValues[0], $setValues[1]];
 
                 $this
                     ->_getRedisInstance()
@@ -252,7 +246,7 @@
          */
         protected function _getValuesByRangeQuery($key, $indexStart, $indexEnd)
         {
-            return ['ZRANGE', $key, (string)$indexStart, (string)$indexEnd];
+            return ['ZRANGE', $key, $indexStart, $indexEnd];
         }
 
         // ##########################################
@@ -291,7 +285,7 @@
          */
         protected function _getValuesByRangeReverseQuery($key, $indexStart, $indexEnd)
         {
-            return ['ZREVRANGE', $key, (string)$indexStart, (string)$indexEnd];
+            return ['ZREVRANGE', $key, $indexStart, $indexEnd];
         }
 
         // ##########################################

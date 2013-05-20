@@ -22,11 +22,11 @@
     console('+ Writing <strings> WITHOUT pipeline (runs=' . $runs . ', sets=' . $sets . ')');
     $summary = 0;
 
-    for($t = 1; $t <= $runs; $t ++)
+    for ($t = 1; $t <= $runs; $t++)
     {
         $start = microtime(TRUE);
 
-        for($i = 0; $i < $sets; $i ++)
+        for ($i = 0; $i < $sets; $i++)
         {
             $response = $redis->set('pipe:OFF:socket:' . $t . '_' . $i, 'hello world ' . $i);
         }
@@ -49,12 +49,12 @@
     console('+ Writing <strings> WITH pipeline (runs=' . $runs . ', sets=' . $sets . ')');
     $summary = 0;
 
-    for($t = 1; $t <= $runs; $t ++)
+    for ($t = 1; $t <= $runs; $t++)
     {
         $start = microtime(TRUE);
         $redis->pipeline();
 
-        for($i = 0; $i < $sets; $i ++)
+        for ($i = 0; $i < $sets; $i++)
         {
             $redis->set('pipe:ON:socket:' . $t . '_' . $i, 'hello world ' . $i);
         }
