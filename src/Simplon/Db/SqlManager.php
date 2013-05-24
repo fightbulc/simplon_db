@@ -115,9 +115,7 @@
          */
         public function fetchAllColumn(SqlQueryBuilder $sqlQuery)
         {
-            $result = $this
-                ->_getSqlInstance()
-                ->FetchAll($sqlQuery->getQuery(), $sqlQuery->getConditions());
+            $result = $this->fetchAll($sqlQuery);
 
             if ($result !== FALSE)
             {
