@@ -67,6 +67,40 @@
 
         /**
          * @param $key
+         * @param $value
+         *
+         * @return bool|mixed
+         */
+        public function resetAdd($key, $value)
+        {
+            // reset
+            $this->delete($key);
+
+            // add new value
+            return $this->add($key, $value);
+        }
+
+        // ##########################################
+
+        /**
+         * @param $key
+         * @param array $values
+         *
+         * @return bool|mixed
+         */
+        public function resetAddMulti($key, array $values)
+        {
+            // reset
+            $this->delete($key);
+
+            // add new data
+            return $this->addMulti($key, $values);
+        }
+
+        // ##########################################
+
+        /**
+         * @param $key
          *
          * @return array
          */
