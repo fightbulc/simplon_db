@@ -2,7 +2,7 @@
     "name": "simplon/db",
     "description": "Simplon DB Libraries",
     "homepage": "https://github.com/fightbulc/simplon_db",
-    "version": "1.2.4",
+    "version": "1.2.5",
     "type": "library",
     "keywords": ["db", "pdo", "mysql", "memcached", "couchbase", "redis"],
     "license": "MIT",

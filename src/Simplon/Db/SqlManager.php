@@ -133,11 +133,12 @@
         // ########################################
 
         /**
+         * @param $type
          * @param SqlQueryBuilder $sqlQuery
          *
-         * @return bool|null|string
+         * @return bool
          */
-        public function insert(SqlQueryBuilder $sqlQuery)
+        protected function _insertReplaceCommand($type, SqlQueryBuilder $sqlQuery)
         {
             $tableName = $sqlQuery->getTableName();
             $data = $sqlQuery->getData();
@@ -167,16 +168,25 @@
                     $_placeholder[] = $placeholder_key;
                 }
 
-                $insertString = 'INSERT';
+                // ------------------------------
 
-                // insert ignore awareness for tables with unique entries
-                if ($sqlQuery->getInsertIgnore() === TRUE)
+                $commandString = 'REPLACE';
+
+                if ($type === 'insert')
                 {
-                    $insertString = 'INSERT IGNORE';
+                    $commandString = 'INSERT';
+
+                    // insert ignore awareness for tables with unique entries
+                    if ($sqlQuery->getInsertIgnore() === TRUE)
+                    {
+                        $commandString = 'INSERT IGNORE';
+                    }
                 }
 
+                // ------------------------------
+
                 // sql statement
-                $sql = $insertString . ' INTO ' . $tableName . ' (' . join(',', $_set) . ') VALUES (' . join(',', $_placeholder) . ')';
+                $sql = $commandString . ' INTO ' . $tableName . ' (' . join(',', $_set) . ') VALUES (' . join(',', $_placeholder) . ')';
 
                 // insert data
                 $insertId = $this
@@ -187,6 +197,30 @@
             }
 
             return FALSE;
+        }
+
+        // ########################################
+
+        /**
+         * @param SqlQueryBuilder $sqlQuery
+         *
+         * @return bool|null|string
+         */
+        public function insert(SqlQueryBuilder $sqlQuery)
+        {
+            return $this->_insertReplaceCommand('insert', $sqlQuery);
+        }
+
+        // ########################################
+
+        /**
+         * @param SqlQueryBuilder $sqlQuery
+         *
+         * @return bool|null|string
+         */
+        public function replace(SqlQueryBuilder $sqlQuery)
+        {
+            return $this->_insertReplaceCommand('replace', $sqlQuery);
         }
 
         // ########################################
