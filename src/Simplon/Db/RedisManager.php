@@ -5,6 +5,7 @@
     use Simplon\Db\Library\Redis\Redis;
     use Simplon\Db\Library\Redis\RedisBitCommands;
     use Simplon\Db\Library\Redis\RedisHashCommands;
+    use Simplon\Db\Library\Redis\RedisHelperCommands;
     use Simplon\Db\Library\Redis\RedisListCommands;
     use Simplon\Db\Library\Redis\RedisSetCommands;
     use Simplon\Db\Library\Redis\RedisSortedSetCommands;
@@ -32,6 +33,9 @@
 
         /** @var RedisStringCommands */
         private $_stringCommandsInstance;
+
+        /** @var RedisHelperCommands */
+        private $_helperCommandsInstance;
 
         // ######################################
 
@@ -141,5 +145,20 @@
             }
 
             return $this->_stringCommandsInstance;
+        }
+
+        // ######################################
+
+        /**
+         * @return RedisHelperCommands
+         */
+        public function getHelperCommandsInstance()
+        {
+            if (!$this->_helperCommandsInstance)
+            {
+                $this->_helperCommandsInstance = new RedisHelperCommands();
+            }
+
+            return $this->_helperCommandsInstance;
         }
     }
