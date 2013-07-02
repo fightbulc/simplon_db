@@ -42,13 +42,13 @@
         // ######################################
 
         /**
-         * @param $hours
+         * @param $days
          *
          * @return mixed
          */
-        public function getExpireByDays($hours)
+        public function getExpireByDays($days)
         {
-            return $this->_getExpireBySeconds($hours, 60 * 60 * 24);
+            return $this->_getExpireBySeconds($days, 60 * 60 * 24);
         }
 
         // ######################################
