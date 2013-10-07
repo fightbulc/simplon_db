@@ -6,11 +6,11 @@
     {
         /**
          * @param $fieldName
-         * @param $values
+         * @param array $values
          *
          * @return string
          */
-        public static function getInStatementWithIntegers($fieldName, $values)
+        public static function getInStatementWithIntegers($fieldName, array $values)
         {
             return "{$fieldName} IN (" . join(',', $values) . ")";
         }
@@ -19,11 +19,11 @@
 
         /**
          * @param $fieldName
-         * @param $values
+         * @param array $values
          *
          * @return string
          */
-        public static function getInStatementWithStrings($fieldName, $values)
+        public static function getInStatementWithStrings($fieldName, array $values)
         {
             $_preparedValues = [];
 
