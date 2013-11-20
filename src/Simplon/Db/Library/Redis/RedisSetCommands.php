@@ -24,10 +24,11 @@
         /**
          * @param $key
          * @param $value
+         * @param bool $expireSeconds
          *
          * @return bool|mixed
          */
-        public function add($key, $value)
+        public function add($key, $value, $expireSeconds = FALSE)
         {
             $response = $this
                 ->_getRedisInstance()
@@ -35,6 +36,12 @@
 
             if ($response != FALSE)
             {
+                if ($expireSeconds !== FALSE)
+                {
+                    $this->_getRedisInstance()
+                        ->keySetExpire($key, $expireSeconds);
+                }
+
                 return $response;
             }
 
@@ -46,10 +53,11 @@
         /**
          * @param $key
          * @param array $values
+         * @param bool $expireSeconds
          *
          * @return bool|mixed
          */
-        public function addMulti($key, array $values)
+        public function addMulti($key, array $values, $expireSeconds = FALSE)
         {
             $response = $this
                 ->_getRedisInstance()
@@ -57,6 +65,12 @@
 
             if ($response != FALSE)
             {
+                if ($expireSeconds !== FALSE)
+                {
+                    $this->_getRedisInstance()
+                        ->keySetExpire($key, $expireSeconds);
+                }
+
                 return $response;
             }
 
@@ -230,10 +244,11 @@
          * @param $storeSetKey
          * @param $setKeyA
          * @param array $setKeyN
+         * @param bool $expireSeconds
          *
          * @return bool|mixed
          */
-        public function storeDifferenceMulti($storeSetKey, $setKeyA, array $setKeyN)
+        public function storeDifferenceMulti($storeSetKey, $setKeyA, array $setKeyN, $expireSeconds = FALSE)
         {
             $response = $this
                 ->_getRedisInstance()
@@ -241,6 +256,12 @@
 
             if ($response != FALSE)
             {
+                if ($expireSeconds !== FALSE)
+                {
+                    $this->_getRedisInstance()
+                        ->keySetExpire($storeSetKey, $expireSeconds);
+                }
+
                 return $response;
             }
 
@@ -324,10 +345,11 @@
          * @param $storeSetKey
          * @param $setKeyA
          * @param $setKeyB
+         * @param bool $expireSeconds
          *
          * @return bool|mixed
          */
-        public function storeIntersection($storeSetKey, $setKeyA, $setKeyB)
+        public function storeIntersection($storeSetKey, $setKeyA, $setKeyB, $expireSeconds = FALSE)
         {
             $response = $this
                 ->_getRedisInstance()
@@ -335,6 +357,12 @@
 
             if ($response != FALSE)
             {
+                if ($expireSeconds !== FALSE)
+                {
+                    $this->_getRedisInstance()
+                        ->keySetExpire($storeSetKey, $expireSeconds);
+                }
+
                 return $response;
             }
 
@@ -347,10 +375,11 @@
          * @param $storeSetKey
          * @param $setKeyA
          * @param array $setKeyN
+         * @param bool $expireSeconds
          *
          * @return bool|mixed
          */
-        public function storeIntersectionMulti($storeSetKey, $setKeyA, array $setKeyN)
+        public function storeIntersectionMulti($storeSetKey, $setKeyA, array $setKeyN, $expireSeconds = FALSE)
         {
             $response = $this
                 ->_getRedisInstance()
@@ -358,6 +387,12 @@
 
             if ($response != FALSE)
             {
+                if ($expireSeconds !== FALSE)
+                {
+                    $this->_getRedisInstance()
+                        ->keySetExpire($storeSetKey, $expireSeconds);
+                }
+
                 return $response;
             }
 
@@ -686,54 +721,39 @@
         // ##########################################
 
         /**
-         * @param $setKeyA
-         * @param array $setKeysN
+         * @param $storeKey
+         * @param array $mergingKeys
          *
          * @return array
          */
-        protected function _getStoreMergeMultiQuery($setKeyA, array $setKeysN)
+        protected function _getStoreMergeMultiQuery($storeKey, array $mergingKeys)
         {
-            return array_merge(['SUNIONSTORE', $setKeyA], $setKeysN);
+            return array_merge(['SUNIONSTORE', $storeKey], $mergingKeys);
         }
 
         // ##########################################
 
         /**
-         * @param $setKeyA
-         * @param $setKeyB
+         * @param $storeKey
+         * @param array $mergingKeys
+         * @param bool $expireSeconds
          *
          * @return bool|mixed
          */
-        public function storeMerge($setKeyA, $setKeyB)
+        public function storeMerge($storeKey, array $mergingKeys, $expireSeconds = FALSE)
         {
             $response = $this
                 ->_getRedisInstance()
-                ->query($this->_getStoreMergeMultiQuery($setKeyA, [$setKeyB]));
+                ->query($this->_getStoreMergeMultiQuery($storeKey, $mergingKeys));
 
             if ($response != FALSE)
             {
-                return $response;
-            }
+                if ($expireSeconds !== FALSE)
+                {
+                    $this->_getRedisInstance()
+                        ->keySetExpire($storeKey, $expireSeconds);
+                }
 
-            return FALSE;
-        }
-
-        // ##########################################
-
-        /**
-         * @param $setKeyA
-         * @param array $setKeyN
-         *
-         * @return bool|mixed
-         */
-        public function storeMergeMulti($setKeyA, array $setKeyN)
-        {
-            $response = $this
-                ->_getRedisInstance()
-                ->query($this->_getStoreMergeMultiQuery($setKeyA, $setKeyN));
-
-            if ($response != FALSE)
-            {
                 return $response;
             }
 
